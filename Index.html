@@ -993,6 +993,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script>
+// ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
+const API_URL = "https://script.google.com/macros/s/AKfycbycGieOT6w8djsA1y5SQm0TBZZ1UT0S6rDzezjqJFyo1UJdh3CgIdvWJu1TeqpCS3GP/exec"; 
+
+let CURRENT_USER = null;
 
 let CU = null;
 let scheduleCanEdit = false;
@@ -2614,7 +2618,70 @@ function exportScheduleExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
   XLSX.writeFile(wb, 'Schedule_' + dept + '_' + month + '.xlsx');
 }
+// เปลี่ยนแปลงฟังก์ชันเรียกข้อมูลเดิมให้ใช้งาน Fetch API (ข้ามโดเมนไปหา Google)
+function callServerAPI(action, data, callback) {
+  const payload = { action: action, ...data };
+  
+  // ใช้ fetch แทน google.script.run
+  fetch(API_URL, {
+    method: "POST",
+    mode: "cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(response => {
+    if(callback) callback(response);
+  })
+  .catch(err => {
+    console.error("API Error: ", err);
+    alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+  });
+}
 
+function handleLogin() {
+  const empId = document.getElementById("empId").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("login-msg");
+  
+  if(!empId || !password) {
+    msg.innerText = "กรุณากรอกข้อมูลให้ครบถ้วน";
+    return;
+  }
+  
+  msg.innerText = "กำลังตรวจสอบสิทธิ์...";
+  
+  callServerAPI("login", { empId: empId, password: password }, function(res) {
+    if(res && res.success) {
+      CURRENT_USER = res.userData; // เก็บข้อมูลผู้ใช้ตามโครงสร้างเดิมของคุณ
+      document.getElementById("scr-login").style.display = "none";
+      document.getElementById("scr-main").style.display = "flex";
+      document.getElementById("txt-user").innerText = CURRENT_USER.name || empId;
+      
+      // เรียกโหลดข้อมูลหน้า Dashboard ต่อทันทีตาม Action เดิม
+      loadDashboard();
+    } else {
+      msg.innerText = res.message || "รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง";
+    }
+  });
+}
+
+function loadDashboard() {
+  callServerAPI("getDashboard", {
+    empId: CURRENT_USER.empId,
+    role: CURRENT_USER.role,
+    dept: CURRENT_USER.dept
+  }, function(res) {
+    if(res && res.success) {
+      // ตัวอย่างการนำข้อมูลมาแมปเข้าสู่ UI ชุดใหม่
+      if(res.stat) {
+        document.getElementById("stat-leave-remain").innerText = res.stat.remain || 0;
+        document.getElementById("stat-leave-pending").innerText = res.stat.pending || 0;
+      }
+      // โครงสร้างประวัติการลา ลำดับเหตุการณ์กะงาน สามารถเอามา Render ลูปลงในการ์ดต่อได้เลยครับ...
+    }
+  });
+}
 </script>
 </body>
 </html>
