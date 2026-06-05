@@ -311,47 +311,124 @@ body{
 
 /* ── DESKTOP LAYOUT ── */
 @media (min-width:768px) {
-  body { background: #e8edf2; }
+  body { background: var(--bg); }
 
-  /* Center the app on desktop like a phone mockup */
-  #login-screen { /* full screen is fine for login */ }
+  /* Bottom nav ซ่อน → ใช้ sidebar แทน */
+  .bottom-nav { display: none; }
 
+  /* Page content ไม่ต้องมี padding-bottom สำหรับ bottom nav */
+  .page { padding: 24px 28px 40px; }
+
+  /* App screen เต็มจอ */
   #app-screen {
-    max-width: 480px;
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
-    background: var(--bg);
-    box-shadow: 0 0 60px rgba(0,0,0,.15);
+  }
+
+  /* Topbar desktop */
+  .topbar { padding: 0 28px; height: 64px; display:flex; align-items:center; }
+  .topbar-sub { display: none; }
+  .topbar-actions { display: none; }
+  .topbar-title { font-size: 20px; margin: 0; flex: 1; }
+
+  /* Layout: sidebar + content */
+  .desktop-layout {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 64px);
+  }
+
+  /* Sidebar navigation */
+  .desktop-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    min-width: 220px;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: 16px 20px 6px;
+  }
+  .sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--muted);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: 'Sarabun', sans-serif;
+    font-weight: 500;
+    border-radius: 0;
+    transition: background .15s, color .15s;
     position: relative;
   }
+  .sidebar-btn svg {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .sidebar-btn:hover { background: var(--bg); color: var(--navy); }
+  .sidebar-btn.active {
+    color: var(--navy);
+    background: #dbeafe;
+    font-weight: 600;
+  }
+  .sidebar-btn.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--navy);
+    border-radius: 0 2px 2px 0;
+  }
+  .sidebar-badge {
+    background: #dc2626; color: #fff;
+    font-size: 10px; font-weight: 700;
+    border-radius: 10px; padding: 1px 7px;
+    margin-left: auto;
+  }
 
-  /* Scrollable area desktop */
-  .page { padding: 20px 20px 100px; }
+  /* Main content area */
+  .desktop-content {
+    flex: 1;
+    overflow-y: auto;
+  }
 
-  /* Slightly larger typography on tablet */
-  .stat-num { font-size: 30px; }
-  .topbar-title { font-size: 22px; }
+  /* Stat grid wider on desktop */
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+  .stat-num { font-size: 28px; }
+
+  /* Cards in content area — max readable width */
+  .page > .card,
+  .page > .stat-grid,
+  .page > .section-label,
+  .page > div {
+    max-width: 900px;
+  }
 }
 
-@media (min-width: 1024px) {
-  /* Wide desktop: show side decoration */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background: linear-gradient(135deg, #1a3a5c 0%, #0f2238 50%, #1a3a5c 100%);
-    z-index: -1;
-  }
-  body::after {
-    content: 'Sandsea Resort · HR System';
-    position: fixed;
-    bottom: 30px; left: 0; right: 0;
-    text-align: center;
-    color: rgba(255,255,255,.2);
-    font-family: 'Instrument Serif', serif;
-    font-size: 14px;
-    letter-spacing: .1em;
-    z-index: -1;
-  }
+@media (min-width: 1200px) {
+  .desktop-sidebar { width: 240px; min-width: 240px; }
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
 }
 </style>
 </head>
@@ -396,6 +473,50 @@ body{
       </div>
     </div>
   </div>
+
+  <!-- DESKTOP LAYOUT WRAPPER -->
+  <div class="desktop-layout">
+
+  <!-- SIDEBAR (desktop only, hidden on mobile via CSS) -->
+  <nav class="desktop-sidebar" id="desktop-sidebar">
+    <div class="sidebar-section-label">เมนู</div>
+    <button class="sidebar-btn active" id="snav-home" onclick="switchPage('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/></svg>หน้าแรก
+    </button>
+    <button class="sidebar-btn" id="snav-leave" onclick="switchPage('leave')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/></svg>แจ้งลา
+    </button>
+    <button class="sidebar-btn" id="snav-schedule" onclick="switchPage('schedule')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/></svg>ตารางงาน
+    </button>
+    <button class="sidebar-btn" id="snav-approve" onclick="switchPage('approve')">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      อนุมัติ
+      <span id="sidebar-badge-pending" class="sidebar-badge" style="display:none">0</span>
+    </button>
+    <button class="sidebar-btn" id="snav-hr" style="display:none" onclick="switchPage('hr')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/></svg>จัดการ HR
+    </button>
+    <div style="flex:1"></div>
+    <div class="sidebar-section-label" style="margin-top:0">บัญชี</div>
+    <button class="sidebar-btn" onclick="openModal('change-pw-modal')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>เปลี่ยนรหัสผ่าน
+    </button>
+    <button class="sidebar-btn" onclick="doLogout()" style="color:var(--danger)">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>ออกจากระบบ
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="desktop-content">
 
   <!-- HOME -->
   <div id="page-home" class="page active">
@@ -846,7 +967,11 @@ body{
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>อนุมัติ
     </button>
   </nav>
-</div>
+
+  </div><!-- /desktop-content -->
+  </div><!-- /desktop-layout -->
+
+</div><!-- /app-screen -->
 
 <!-- ═══ MODAL: แจ้งลา (ทั่วไป) ═══ -->
 <div class="modal-overlay" id="leave-modal">
@@ -1453,6 +1578,8 @@ function startApp() {
 
   if (CU.role === 'hr' || CU.role === 'gm') {
     document.getElementById('menu-hr').style.display = 'flex';
+    const snavHr = document.getElementById('snav-hr');
+    if (snavHr) snavHr.style.display = 'flex';
   }
 
   // แสดง "สรุปวันลา" + "ใบลา" เฉพาะ HR / ซ่อน filter-row + approve-list สำหรับ HR
@@ -1542,6 +1669,8 @@ function loadDashboard() {
     const badge = document.getElementById('badge-pending');
     badge.textContent = d.pendingCount;
     badge.style.display = d.pendingCount > 0 ? 'block' : 'none';
+    const sbadge = document.getElementById('sidebar-badge-pending');
+    if (sbadge) { sbadge.textContent = d.pendingCount; sbadge.style.display = d.pendingCount > 0 ? 'inline' : 'none'; }
     document.getElementById('menu-approve-sub').textContent =
       d.pendingCount > 0 ? d.pendingCount + ' รายการรออนุมัติ' : 'ไม่มีรายการ';
     const hl = document.getElementById('holidays-list');
@@ -1565,15 +1694,21 @@ function loadDashboard() {
 function switchPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
   const pg = document.getElementById('page-' + name);
   if (pg) pg.classList.add('active');
   const nv = document.getElementById('nav-' + name);
   if (nv) nv.classList.add('active');
+  const snv = document.getElementById('snav-' + name);
+  if (snv) snv.classList.add('active');
   const titles = {
     home:'ระบบฝ่ายบุคคล', leave:'แจ้งลา / ขาด / สาย',
     schedule:'ตารางงาน', approve:'รายการคำขอ', hr:'จัดการ HR'
   };
   document.getElementById('topbar-title').textContent = titles[name] || '';
+  // Scroll desktop content to top on page change
+  const dc = document.querySelector('.desktop-content');
+  if (dc) dc.scrollTop = 0;
   if (name === 'schedule') initSchedulePage();
 }
 
