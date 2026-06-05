@@ -333,6 +333,7 @@ body{
   .topbar { padding: 0 28px; height: 64px; display:flex; align-items:center; gap: 12px; }
   .topbar-sub { display: none; }
   .topbar-actions { display: flex; margin-top: 0; flex-wrap: nowrap; }
+  #topbar-changepw-btn { display: none; }
   .topbar-title { font-size: 20px; margin: 0; flex: 1; }
 
   /* Layout: sidebar + content */
@@ -470,7 +471,7 @@ body{
         </svg>
         <span id="user-display">—</span>
       </div>
-      <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;color:rgba(255,255,255,.85);transition:background .2s" onclick="openModal('change-pw-modal')" onmouseover="this.style.background='rgba(255,255,255,.18)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">
+      <div id="topbar-changepw-btn" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;color:rgba(255,255,255,.85);transition:background .2s" onclick="openModal('change-pw-modal')" onmouseover="this.style.background='rgba(255,255,255,.18)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">
         🔑 เปลี่ยนรหัสผ่าน
       </div>
       <div id="pwa-install-btn" style="display:none;align-items:center;gap:5px;background:rgba(201,162,39,.25);border:1px solid rgba(201,162,39,.4);border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;color:#ffd97a;transition:background .2s" onclick="triggerPWAInstall()">
