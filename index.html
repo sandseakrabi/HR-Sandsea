@@ -81,6 +81,9 @@ body{
 .topbar-user:hover{background:rgba(255,255,255,.2);}
 .topbar-actions{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;}
 
+/* ── DESKTOP SIDEBAR (hidden on mobile by default) ── */
+.desktop-sidebar { display: none; }
+
 /* ── BOTTOM NAV ── */
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;
@@ -327,9 +330,9 @@ body{
   }
 
   /* Topbar desktop */
-  .topbar { padding: 0 28px; height: 64px; display:flex; align-items:center; }
+  .topbar { padding: 0 28px; height: 64px; display:flex; align-items:center; gap: 12px; }
   .topbar-sub { display: none; }
-  .topbar-actions { display: none; }
+  .topbar-actions { display: flex; margin-top: 0; flex-wrap: nowrap; }
   .topbar-title { font-size: 20px; margin: 0; flex: 1; }
 
   /* Layout: sidebar + content */
@@ -417,12 +420,14 @@ body{
   .stat-grid { grid-template-columns: repeat(4, 1fr); }
   .stat-num { font-size: 28px; }
 
-  /* Cards in content area — max readable width */
+  /* Cards in content area — full width, centered */
   .page > .card,
   .page > .stat-grid,
   .page > .section-label,
   .page > div {
-    max-width: 900px;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
