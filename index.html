@@ -571,28 +571,23 @@ body{
         </div>
         <div class="row-arrow"><svg viewBox="0 0 16 16"><polyline points="6 4 10 8 6 12"/></svg></div>
       </div>
-    <div class="list-row" onclick="switchPage('schedule')">
-      <div class="icon-box ib-purple">
-        <svg viewBox="0 0 24 24">
-        <rect x="3" y="4" width="18" height="18" rx="2"/>
-        <line x1="8" y1="2" x2="8" y2="6"/>
-        <line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
+      <div class="list-row" onclick="switchPage('schedule')">
+        <div class="icon-box ib-purple">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="row-info">
+          <div class="row-label">ตารางงาน</div>
+          <div class="row-sub">จัดกะพนักงานรายเดือน</div>
+        </div>
+        <div class="row-arrow">
+          <svg viewBox="0 0 16 16"><polyline points="6 4 10 8 6 12"/></svg>
+        </div>
       </div>
-
-    <div class="row-info">
-      <div class="row-label">ตารางงาน</div>
-      <div class="row-sub">จัดกะพนักงานรายเดือน</div>
-    </div>
-
-    <div class="row-arrow">
-      <svg viewBox="0 0 16 16">
-      <polyline points="6 4 10 8 6 12"/>
-      </svg>
-    </div>
-
-</div>
       <div class="list-row" onclick="switchPage('approve')">
         <div class="icon-box ib-amber">
           <svg><polyline points="20 6 9 17 4 12"/>
@@ -1385,7 +1380,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbzRscmSpCx7KVmcd7FPtuGldN6qS4gmnBzcdW8s5yDb5xohFFWpS7Czwzu4SSVKOW1U/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbyaFRqQ3y05A8qKBpfdnrmRMwTeGWzJk6245zMKZzCdH2PHDuwRmmf6_XaSWB2uSga8/exec"; 
 
 let CURRENT_USER = null;
 
@@ -2917,8 +2912,15 @@ function exportScheduleExcel() {
   XLSX.writeFile(wb, 'Schedule_' + dept + '_' + month + '.xlsx');
 }
 // ── Fetch API สำหรับติดต่อ Google Apps Script Web App ──
+let _apiInFlight = 0; // นับจำนวน request ที่กำลังทำงานอยู่
+
 function callServerAPI(action, data, callback) {
   const payload = JSON.stringify({ action, ...data });
+
+  // ── Loading UI ──
+  _apiInFlight++;
+  _setGlobalLoading(true);
+
   fetch(API_URL, {
     method: 'POST',
     mode: 'cors',
@@ -2933,6 +2935,23 @@ function callServerAPI(action, data, callback) {
   .catch(err => {
     console.error('API Error [' + action + ']:', err);
     if (callback) callback({ success: false, message: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message });
+  })
+  .finally(() => {
+    _apiInFlight--;
+    if (_apiInFlight <= 0) { _apiInFlight = 0; _setGlobalLoading(false); }
+  });
+}
+
+// แสดง/ซ่อน overlay loading บนปุ่ม submit ทุกปุ่ม
+function _setGlobalLoading(on) {
+  document.querySelectorAll('.btn-primary, .btn-success, .btn-danger').forEach(btn => {
+    if (on) {
+      btn.dataset._origDisabled = btn.disabled ? '1' : '0';
+      btn.disabled = true;
+      btn.style.opacity = '0.65';
+    } else {
+      if (btn.dataset._origDisabled === '0') { btn.disabled = false; btn.style.opacity = ''; }
+    }
   });
 }
 </script>
