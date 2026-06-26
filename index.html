@@ -1679,7 +1679,7 @@ function startApp() {
     const llDept  = document.getElementById('ll-dept');
     if (sumDept) { sumDept.disabled = false; sumDept.value = 'ALL'; }
     if (llDept)  { llDept.disabled  = false; llDept.value  = 'ALL'; }
-  } else if (CU.role === 'manager') {
+  } else if (CU.role === 'leader') {
     // Manager: แสดง section เหมือน HR แต่บังคับแผนกตัวเอง
     if (summarySection)   summarySection.style.display   = 'block';
     if (leaveListSection) leaveListSection.style.display = 'block';
