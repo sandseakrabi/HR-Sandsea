@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1675,6 +1674,34 @@ function startApp() {
     if (leaveListSection) leaveListSection.style.display = 'block';
     if (filterRow)        filterRow.style.display        = 'none';
     if (approveList)      approveList.style.display      = 'none';
+    // HR: unlock แผนก ให้เลือกได้ทุกแผนก
+    const sumDept = document.getElementById('sum-dept');
+    const llDept  = document.getElementById('ll-dept');
+    if (sumDept) { sumDept.disabled = false; sumDept.value = 'ALL'; }
+    if (llDept)  { llDept.disabled  = false; llDept.value  = 'ALL'; }
+  } else if (CU.role === 'manager') {
+    // Manager: แสดง section เหมือน HR แต่บังคับแผนกตัวเอง
+    if (summarySection)   summarySection.style.display   = 'block';
+    if (leaveListSection) leaveListSection.style.display = 'block';
+    if (filterRow)        filterRow.style.display        = 'none';
+    if (approveList)      approveList.style.display      = 'none';
+    // Lock แผนกให้เป็นแผนกของ Manager เท่านั้น เปลี่ยนไม่ได้
+    const sumDept = document.getElementById('sum-dept');
+    const llDept  = document.getElementById('ll-dept');
+    if (sumDept) {
+      sumDept.value = CU.dept;
+      sumDept.disabled = true;
+      sumDept.title = 'คุณเห็นได้เฉพาะแผนก ' + CU.dept;
+      sumDept.style.opacity = '0.7';
+      sumDept.style.cursor = 'not-allowed';
+    }
+    if (llDept) {
+      llDept.value = CU.dept;
+      llDept.disabled = true;
+      llDept.title = 'คุณเห็นได้เฉพาะแผนก ' + CU.dept;
+      llDept.style.opacity = '0.7';
+      llDept.style.cursor = 'not-allowed';
+    }
   } else {
     if (summarySection)   summarySection.style.display   = 'none';
     if (leaveListSection) leaveListSection.style.display = 'none';
