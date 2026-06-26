@@ -1380,7 +1380,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbyaFRqQ3y05A8qKBpfdnrmRMwTeGWzJk6245zMKZzCdH2PHDuwRmmf6_XaSWB2uSga8/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbys77d9HVfv88yZWPcaakE1lWD4zoT68OBLktja6NuQ-PZc8rXAWuWRGIe6F3LfZ5Ze/exec"; 
 
 let CURRENT_USER = null;
 
@@ -2086,7 +2086,7 @@ function doApprove(status) {
   callServerAPI('updateLeaveStatus', {
     leaveId: currentLeaveId, status,
     approverName: CU.name, note,
-    role: CU.role, dept: CU.dept, empId: CU.empId, subDept: CU.subDept
+    role: CU.role, dept: CU.dept, empId: CU.empId, subDept: CU.subDept || ''
   }, res => {
     if (!res || !res.success) { toast('⚠️ ' + (res && res.message || 'บันทึกไม่สำเร็จ')); return; }
     closeModal('approve-modal');
@@ -2946,11 +2946,15 @@ function callServerAPI(action, data, callback) {
 function _setGlobalLoading(on) {
   document.querySelectorAll('.btn-primary, .btn-success, .btn-danger').forEach(btn => {
     if (on) {
-      btn.dataset._origDisabled = btn.disabled ? '1' : '0';
-      btn.disabled = true;
-      btn.style.opacity = '0.65';
+      if (!btn.classList.contains('api-locked')) {
+        btn.classList.add('api-locked');
+        btn.disabled = true;
+        btn.style.opacity = '0.65';
+      }
     } else {
-      if (btn.dataset._origDisabled === '0') { btn.disabled = false; btn.style.opacity = ''; }
+      btn.classList.remove('api-locked');
+      btn.disabled = false;
+      btn.style.opacity = '';
     }
   });
 }
