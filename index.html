@@ -1124,20 +1124,6 @@ body{
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-      <div class="form-group">
-        <label class="form-label">วันหยุดหลัก</label>
-        <input class="form-input" id="emp-f-offmain" type="text" placeholder="อาทิตย์">
-      </div>
-      <div class="form-group">
-        <label class="form-label">วันหยุดสำรอง</label>
-        <input class="form-input" id="emp-f-offalt" type="text" placeholder="เสาร์">
-      </div>
-      <div class="form-group">
-        <label class="form-label">ประเภทสัปดาห์</label>
-        <input class="form-input" id="emp-f-offweek" type="text" placeholder="A">
-      </div>
-    </div>
 
     <div class="form-group" id="emp-f-pw-wrap">
       <label class="form-label">รหัสผ่านเริ่มต้น <span style="font-weight:400;color:var(--muted)">(ปล่อยว่างเพื่อใช้รหัสพนักงาน)</span></label>
@@ -1570,7 +1556,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbx16Qx2pV5faQ0CV2PHBqj_-DPw51D8bn0eMjiN70LKwq8_4tGi8nOKlEqOelmlEGNN/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzOZy_YcP9srwO3AnHqlsRurQc7Ks7bknHWLBr0Mnxy1FJOgmHpc-hrxDVzEqqPJeTJ/exec"; 
 
 let CURRENT_USER = null;
 
@@ -3390,9 +3376,6 @@ function openEmpModal(empId) {
     document.getElementById('emp-f-annual').value      = e.annualLeave;
     document.getElementById('emp-f-carry-annual').value  = e.carryAnnual;
     document.getElementById('emp-f-carry-holiday').value = e.carryHoliday;
-    document.getElementById('emp-f-offmain').value     = e.offMain  || 'อาทิตย์';
-    document.getElementById('emp-f-offalt').value      = e.offAlt   || 'เสาร์';
-    document.getElementById('emp-f-offweek').value     = e.offWeekType || 'A';
     document.getElementById('emp-f-pw').value          = '';
     document.getElementById('emp-f-active').checked    = e.active;
   } else {
@@ -3405,9 +3388,6 @@ function openEmpModal(empId) {
     document.getElementById('emp-f-annual').value      = 10;
     document.getElementById('emp-f-carry-annual').value  = 0;
     document.getElementById('emp-f-carry-holiday').value = 0;
-    document.getElementById('emp-f-offmain').value     = 'อาทิตย์';
-    document.getElementById('emp-f-offalt').value      = 'เสาร์';
-    document.getElementById('emp-f-offweek').value     = 'A';
     document.getElementById('emp-f-active').checked    = true;
   }
   openModal('emp-modal');
@@ -3434,9 +3414,6 @@ function submitEmpForm() {
     annualLeave  : Number(document.getElementById('emp-f-annual').value || 0),
     carryAnnual  : Number(document.getElementById('emp-f-carry-annual').value || 0),
     carryHoliday : Number(document.getElementById('emp-f-carry-holiday').value || 0),
-    offMain      : document.getElementById('emp-f-offmain').value.trim() || 'อาทิตย์',
-    offAlt       : document.getElementById('emp-f-offalt').value.trim()  || 'เสาร์',
-    offWeekType  : document.getElementById('emp-f-offweek').value.trim() || 'A',
     password     : document.getElementById('emp-f-pw').value || '',
     active       : document.getElementById('emp-f-active').checked
   };
