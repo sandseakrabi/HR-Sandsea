@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1572,7 +1573,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbzOZy_YcP9srwO3AnHqlsRurQc7Ks7bknHWLBr0Mnxy1FJOgmHpc-hrxDVzEqqPJeTJ/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxIjM6sUZbd292LPKPEJMiLOMaT6bQIaPZ47BQS59GtdH256i5xvBNJ-PsziZdXMZjs/exec"; 
 
 let CURRENT_USER = null;
 
@@ -2249,11 +2250,45 @@ function submitShiftReq() {
 }
 
 // ══ LEAVE REQUESTS ══
+
+// ── คำนวณช่วงวันที่ของรอบบัญชีปัจจุบัน (ตัดทุกวันที่ 21 ถึง 20 เดือนถัดไป) ──
+// เช่น วันนี้ 27/06 → รอบคือ 21/06 - 20/07
+//      วันนี้ 05/07 → รอบคือ 21/06 - 20/07 (ยังไม่ถึง 21 จึงนับเป็นรอบก่อนหน้า)
+function _currentPayCycle() {
+  const now = new Date();
+  let m = now.getMonth();      // 0-11
+  let y = now.getFullYear();
+  if (now.getDate() < 21) {    // ยังไม่ถึงวันที่ 21 → รอบเริ่มต้นเดือนก่อน
+    m -= 1;
+    if (m < 0) { m = 11; y -= 1; }
+  }
+  const start = new Date(y, m, 21, 0, 0, 0, 0);
+  let em = m + 1, ey = y;
+  if (em > 11) { em = 0; ey += 1; }
+  const end = new Date(ey, em, 20, 23, 59, 59, 999);
+  return { start, end };
+}
+
+// ── เช็คว่าใบลา (startDate-endDate) มีวันใดวันหนึ่งคาบเกี่ยวกับรอบบัญชีปัจจุบันหรือไม่ ──
+function _inCurrentPayCycle(startDateStr, endDateStr) {
+  const cyc = _currentPayCycle();
+  const s = new Date(startDateStr);
+  if (isNaN(s.getTime())) return true; // วันที่อ่านไม่ออก → แสดงไว้ก่อน กันข้อมูลหายผิดพลาด
+  const e = new Date(endDateStr || startDateStr);
+  const eOk = isNaN(e.getTime()) ? s : e;
+  return s <= cyc.end && eOk >= cyc.start; // คาบเกี่ยว = วันเริ่มไม่เลยรอบ และวันจบไม่ก่อนรอบ
+}
+
+// ── กรองเฉพาะใบลาที่อยู่ในรอบบัญชีปัจจุบัน (ใช้เฉพาะหน้าอนุมัติ ไม่กระทบ "ใบลาของฉัน"/สรุปวันลา/สรุปใบลา) ──
+function _filterByPayCycle(rows) {
+  return rows.filter(r => _inCurrentPayCycle(r.startDate, r.endDate));
+}
+
 function loadLeaveRequests() {
   callServerAPI('getLeaveRequests', { role: CU.role, dept: CU.dept, subDept: CU.subDept||'', empId: CU.empId }, rows => {
     if (!rows) return;
-    allLeaveReqs = rows;
-    renderApproveList(rows);
+    allLeaveReqs = rows; // เก็บข้อมูลครบทุกช่วงเวลาไว้ใน allLeaveReqs (ใบลาของฉันยังเห็นประวัติทั้งหมด)
+    renderApproveList(_filterByPayCycle(rows)); // หน้าอนุมัติ: แสดงเฉพาะรอบบัญชีปัจจุบัน
     renderMyLeave(rows);
   });
 }
@@ -2263,7 +2298,8 @@ function filterLeave(status, btn) {
   const parentRow = btn.closest('div');
   parentRow.querySelectorAll('.btn').forEach(b => b.className='btn btn-outline btn-sm');
   btn.className = 'btn btn-primary btn-sm';
-  renderApproveList(status==='all' ? allLeaveReqs : allLeaveReqs.filter(r=>r.status===status));
+  const cycleRows = _filterByPayCycle(allLeaveReqs);
+  renderApproveList(status==='all' ? cycleRows : cycleRows.filter(r=>r.status===status));
 }
 
 function renderApproveList(rows) {
