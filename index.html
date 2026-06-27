@@ -1841,6 +1841,8 @@ function startApp() {
   // แสดง "สรุปวันลา" + "ใบลา" เฉพาะ HR (ตอนนี้อยู่ใน page-hr แล้ว) / ซ่อน filter-row + approve-list สำหรับ HR
   const filterRow        = document.getElementById('filter-row');
   const approveList      = document.getElementById('approve-list');
+  const summarySection   = document.getElementById('summary-section');
+  const leaveListSection = document.getElementById('leave-list-section');
   if (CU.role === 'hr') {
     // HR เห็นใบลาทุกคนแบบ read-only (ผ่าน approve-list-employee)
     // แต่ไม่มีสิทธิ์อนุมัติ — ซ่อน leader-approve-section
