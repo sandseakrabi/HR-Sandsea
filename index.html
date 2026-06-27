@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1902,8 +1901,10 @@ function startApp() {
   renderShiftGrid('requested-shift-grid', '', 'selectRequestedShift');
 
   if (CU.role === 'hr') {
-    // HR เริ่มที่หน้าจัดการ HR ทันที (ไม่โหลด dashboard/leave)
+    // HR เริ่มที่หน้าจัดการ HR ทันที แต่โหลด leave requests ไว้ก่อน
+    // เพราะ searchLeaveList() ใช้ allLeaveReqs ซึ่งต้องโหลดจาก server
     switchPage('hr');
+    loadLeaveRequests();
   } else {
     loadDashboard();
     loadLeaveRequests();
