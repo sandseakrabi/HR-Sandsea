@@ -2078,10 +2078,10 @@ function filterLeave(status, btn) {
 function renderApproveList(rows) {
   const el = document.getElementById('approve-list');
   if (!rows.length) { el.innerHTML='<div class="empty-state"><p>ไม่มีรายการ</p></div>'; return; }
-  const isLeader = CU.role === 'leader';
   el.innerHTML = '';
   rows.forEach(r => {
-    const isPending = r.status === 'รออนุมัติ';
+    const isPending  = r.status === 'รออนุมัติ';
+    const isMyLeave  = String(r.empId) === String(CU.empId); // ใบลาของตัวเอง
     const wrap = document.createElement('div');
     wrap.className = 'card';
     wrap.style.marginBottom = '10px';
@@ -2106,10 +2106,15 @@ function renderApproveList(rows) {
         attach +
       '</div>' +
       '<span class="badge ' + badgeCls + '">' + r.status + '</span>';
-    row.addEventListener('click', function() { openApproveModal(r.id); });
+    // คลิกที่ row เพื่อเปิด modal อนุมัติ (เฉพาะ role ที่มีสิทธิ์)
+    if (CU.role !== 'employee') {
+      row.style.cursor = 'pointer';
+      row.addEventListener('click', function() { openApproveModal(r.id); });
+    }
     wrap.appendChild(row);
 
-    if (isLeader && isPending) {
+    // แสดงปุ่ม แก้ไข + ยกเลิก เฉพาะใบลาของตัวเอง และยังรออนุมัติอยู่
+    if (isMyLeave && isPending) {
       const btnRow = document.createElement('div');
       btnRow.style.cssText = 'display:flex;gap:6px;padding:0 16px 12px;margin-top:-4px';
       btnRow.addEventListener('click', function(e){ e.stopPropagation(); });
@@ -2117,12 +2122,12 @@ function renderApproveList(rows) {
       const editBtn = document.createElement('button');
       editBtn.textContent = '✏️ แก้ไข';
       editBtn.style.cssText = 'flex:1;background:#dbeafe;color:#1d4ed8;border:none;border-radius:9px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;font-family:Sarabun,sans-serif';
-      editBtn.addEventListener('click', function() { leaderEditLeave(r.id); });
+      editBtn.addEventListener('click', function() { openEditLeaveModal(r.id); });
 
       const cancelBtn = document.createElement('button');
       cancelBtn.textContent = '🗑 ยกเลิก';
       cancelBtn.style.cssText = 'flex:1;background:#fee2e2;color:#dc2626;border:none;border-radius:9px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;font-family:Sarabun,sans-serif';
-      cancelBtn.addEventListener('click', function() { leaderCancelLeave(r.id); });
+      cancelBtn.addEventListener('click', function() { deleteMyLeave(r.id); });
 
       btnRow.appendChild(editBtn);
       btnRow.appendChild(cancelBtn);
@@ -2402,24 +2407,69 @@ function searchLeaveList() {
     return;
   }
 
-  el.innerHTML = '<div style="padding:0 16px 16px">' +
-    rows.map(r => `
-    <div class="card" style="margin-bottom:10px">
-      <div class="list-row" style="align-items:flex-start" onclick="openApproveModal('${r.id}')">
-        <div class="avatar" style="background:#dbeafe;color:#1d4ed8">${r.empName.substring(0,2)}</div>
-        <div class="row-info">
-          <div class="row-label">${_nameWithPosition(r.empName, r.empPosition)}
-            <span style="color:var(--muted);font-weight:400;font-size:12px"> · ${r.dept}</span>
-          </div>
-          <div class="row-sub">${r.type} · ${r.startDate}${r.endDate!==r.startDate?' – '+r.endDate:''} ${r.halfDay?'(ครึ่งวัน)':'('+r.days+' วัน)'}</div>
-          <div class="row-sub" style="margin-top:2px">${r.reason}</div>
-          ${r.attachmentUrl?`<div style="margin-top:4px"><a href="${r.attachmentUrl}" target="_blank" style="font-size:12px;color:var(--info)">ดูไฟล์แนบ</a></div>`:''}
-        </div>
-        <span class="badge ${r.status==='รออนุมัติ'?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger'}">${r.status}</span>
-      </div>
-    </div>`).join('') +
-    `<p style="font-size:12px;color:var(--muted);text-align:right;margin-top:4px">ทั้งหมด ${rows.length} รายการ</p>` +
-    '</div>';
+  const isLeader = CU.role === 'leader';
+  const container = document.createElement('div');
+  container.style.cssText = 'padding:0 16px 16px';
+
+  rows.forEach(r => {
+    const isPending = r.status === 'รออนุมัติ';
+    const badgeCls = r.status==='รออนุมัติ'?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger';
+    const dateRange = r.startDate + (r.endDate !== r.startDate ? ' – ' + r.endDate : '');
+    const dayLabel  = r.halfDay ? '(ครึ่งวัน)' : '(' + r.days + ' วัน)';
+    const attach    = r.attachmentUrl
+      ? '<div style="margin-top:4px"><a href="' + r.attachmentUrl + '" target="_blank" style="font-size:12px;color:var(--info)">ดูไฟล์แนบ</a></div>'
+      : '';
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.marginBottom = '10px';
+
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.style.alignItems = 'flex-start';
+    row.innerHTML =
+      '<div class="avatar" style="background:#dbeafe;color:#1d4ed8">' + r.empName.substring(0,2) + '</div>' +
+      '<div class="row-info">' +
+        '<div class="row-label">' + _nameWithPosition(r.empName, r.empPosition) +
+          '<span style="color:var(--muted);font-weight:400;font-size:12px"> · ' + r.dept + '</span></div>' +
+        '<div class="row-sub">' + r.type + ' · ' + dateRange + ' ' + dayLabel + '</div>' +
+        '<div class="row-sub" style="margin-top:2px">' + r.reason + '</div>' +
+        attach +
+      '</div>' +
+      '<span class="badge ' + badgeCls + '">' + r.status + '</span>';
+    row.addEventListener('click', function() { openApproveModal(r.id); });
+    card.appendChild(row);
+
+    if (isLeader && isPending) {
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex;gap:6px;padding:0 16px 12px;margin-top:-4px';
+      btnRow.addEventListener('click', function(e) { e.stopPropagation(); });
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '✏️ แก้ไข';
+      editBtn.style.cssText = 'flex:1;background:#dbeafe;color:#1d4ed8;border:none;border-radius:9px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;font-family:Sarabun,sans-serif';
+      editBtn.addEventListener('click', function() { leaderEditLeave(r.id); });
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = '🗑 ยกเลิก';
+      cancelBtn.style.cssText = 'flex:1;background:#fee2e2;color:#dc2626;border:none;border-radius:9px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;font-family:Sarabun,sans-serif';
+      cancelBtn.addEventListener('click', function() { leaderCancelLeave(r.id); });
+
+      btnRow.appendChild(editBtn);
+      btnRow.appendChild(cancelBtn);
+      card.appendChild(btnRow);
+    }
+
+    container.appendChild(card);
+  });
+
+  const countEl = document.createElement('p');
+  countEl.style.cssText = 'font-size:12px;color:var(--muted);text-align:right;margin-top:4px';
+  countEl.textContent = 'ทั้งหมด ' + rows.length + ' รายการ';
+  container.appendChild(countEl);
+
+  el.innerHTML = '';
+  el.appendChild(container);
 
   if (exportBtn) exportBtn.style.display = 'inline-block';
 }
