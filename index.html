@@ -1443,7 +1443,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbwfOHLmG-2L4NASuztPMeZWRDECurzshoHq04UdINYY2kofPNQtZ-sS5QEbVCiQ3Hdg/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycby9mtaQ2fr2fhytC-hB2kQ2j5N9XxFAAodaNvavT71bqZr0A7zwmRZp-CTCOr-cKJoS/exec"; 
 
 let CURRENT_USER = null;
 
@@ -1686,6 +1686,9 @@ function startApp() {
     if (leaveListSection) leaveListSection.style.display = 'block';
     if (filterRow)        filterRow.style.display        = 'none';
     if (approveList)      approveList.style.display      = 'none';
+    // ซ่อน approve-list-employee สำหรับ HR
+    const empList = document.getElementById('approve-list-employee');
+    if (empList) empList.style.display = 'none';
     // HR: unlock แผนก ให้เลือกได้ทุกแผนก
     const sumDept = document.getElementById('sum-dept');
     const llDept  = document.getElementById('ll-dept');
@@ -1716,6 +1719,18 @@ function startApp() {
       llDept.style.opacity = '0.7';
       llDept.style.cursor = 'not-allowed';
     }
+  } else if (CU.role === 'gm') {
+    // GM: แสดงรายการใบลา leader (บน) + สรุปวันลา + ใบลา (ล่าง) เลือกแผนกได้ทุกแผนก
+    const leaderSection = document.getElementById('leader-approve-section');
+    if (leaderSection)    leaderSection.style.display    = 'block';
+    if (summarySection)   summarySection.style.display   = 'block';
+    if (leaveListSection) leaveListSection.style.display = 'block';
+    if (filterRow)        filterRow.style.display        = 'none';
+    // GM unlock แผนก ให้เลือกได้ทุกแผนก
+    const sumDeptGm = document.getElementById('sum-dept');
+    const llDeptGm  = document.getElementById('ll-dept');
+    if (sumDeptGm) { sumDeptGm.disabled = false; sumDeptGm.value = 'ALL'; }
+    if (llDeptGm)  { llDeptGm.disabled  = false; llDeptGm.value  = 'ALL'; }
   } else {
     if (summarySection)   summarySection.style.display   = 'none';
     if (leaveListSection) leaveListSection.style.display = 'none';
@@ -1728,14 +1743,23 @@ function startApp() {
   const today = new Date();
   const tStr = _localDate(today);
   const firstOfMonth = _localDate(new Date(today.getFullYear(), today.getMonth(), 1));
+  // คำนวณรอบเงินเดือนปัจจุบัน (21 ของเดือนที่แล้ว – 20 ของเดือนถัดไป)
+  let payrollStart, payrollEnd;
+  if (today.getDate() >= 21) {
+    payrollStart = _localDate(new Date(today.getFullYear(), today.getMonth(), 21));
+    payrollEnd   = _localDate(new Date(today.getFullYear(), today.getMonth() + 1, 20));
+  } else {
+    payrollStart = _localDate(new Date(today.getFullYear(), today.getMonth() - 1, 21));
+    payrollEnd   = _localDate(new Date(today.getFullYear(), today.getMonth(), 20));
+  }
   const sumStart = document.getElementById('sum-start');
   const sumEnd   = document.getElementById('sum-end');
-  if (sumStart && !sumStart.value) sumStart.value = firstOfMonth;
-  if (sumEnd   && !sumEnd.value)   sumEnd.value   = tStr;
+  if (sumStart && !sumStart.value) sumStart.value = payrollStart;
+  if (sumEnd   && !sumEnd.value)   sumEnd.value   = payrollEnd;
   const llStart = document.getElementById('ll-start');
   const llEnd   = document.getElementById('ll-end');
-  if (llStart && !llStart.value) llStart.value = firstOfMonth;
-  if (llEnd   && !llEnd.value)   llEnd.value   = tStr;
+  if (llStart && !llStart.value) llStart.value = payrollStart;
+  if (llEnd   && !llEnd.value)   llEnd.value   = payrollEnd;
 
   document.getElementById('leave-start').value = tStr;
   document.getElementById('leave-end').value   = tStr;
@@ -2079,7 +2103,26 @@ function loadLeaveRequests() {
   callServerAPI('getLeaveRequests', { role: CU.role, dept: CU.dept, subDept: CU.subDept||'', empId: CU.empId }, rows => {
     if (!rows) return;
     allLeaveReqs = rows;
-    renderApproveList(rows);
+    // คำนวณรอบเงินเดือนปัจจุบัน: 21 ของเดือนที่แล้ว – 20 ของเดือนนี้ (หรือถัดไปถ้าวันที่ < 21)
+    const today = new Date();
+    let periodStart, periodEnd;
+    if (today.getDate() >= 21) {
+      // วันที่ 21+ → รอบ: 21 เดือนนี้ – 20 เดือนหน้า
+      periodStart = new Date(today.getFullYear(), today.getMonth(), 21);
+      periodEnd   = new Date(today.getFullYear(), today.getMonth() + 1, 20);
+    } else {
+      // วันที่ 1-20 → รอบ: 21 เดือนที่แล้ว – 20 เดือนนี้
+      periodStart = new Date(today.getFullYear(), today.getMonth() - 1, 21);
+      periodEnd   = new Date(today.getFullYear(), today.getMonth(), 20);
+    }
+    const psStr = periodStart.toISOString().slice(0,10);
+    const peStr = periodEnd.toISOString().slice(0,10);
+    // กรองเฉพาะรอบปัจจุบันสำหรับการแสดงในหน้าอนุมัติ (leader, hr, gm)
+    let approveRows = rows;
+    if (CU.role === 'leader' || CU.role === 'hr' || CU.role === 'gm') {
+      approveRows = rows.filter(r => r.startDate >= psStr && r.startDate <= peStr);
+    }
+    renderApproveList(approveRows);
     renderMyLeave(rows);
   });
 }
@@ -2093,13 +2136,21 @@ function filterLeave(status, btn) {
 }
 
 function renderApproveList(rows) {
-  // leader ใช้ approve-list ใน leader-approve-section, role อื่นใช้ approve-list-employee
-  const elId = CU.role === 'leader' ? 'approve-list' : 'approve-list-employee';
+  // leader/gm ใช้ approve-list ใน leader-approve-section, role อื่นใช้ approve-list-employee
+  const elId = (CU.role === 'leader' || CU.role === 'gm') ? 'approve-list' : 'approve-list-employee';
   const el = document.getElementById(elId);
   if (!el) return;
-  if (!rows.length) { el.innerHTML='<div class="empty-state"><p>ไม่มีรายการ</p></div>'; return; }
+  // GM: filter เฉพาะใบลาของตัวเอง + ของ leader
+  let displayRows = rows;
+  if (CU.role === 'gm') {
+    displayRows = rows.filter(r => String(r.empId) === String(CU.empId) || r.empRole === 'leader');
+    // ลืมสแกนนิ้วที่รอ GM อนุมัติ ก็แสดงด้วย
+    const extras = rows.filter(r => r.type === 'ลืมสแกนนิ้ว' && r.status === 'รอ GM อนุมัติ');
+    extras.forEach(e => { if (!displayRows.find(x => x.id === e.id)) displayRows.push(e); });
+  }
+  if (!displayRows.length) { el.innerHTML='<div class="empty-state"><p>ไม่มีรายการ</p></div>'; return; }
   el.innerHTML = '';
-  rows.forEach(r => {
+  displayRows.forEach(r => {
     const isPending  = r.status === 'รออนุมัติ';
     const isMyLeave  = String(r.empId) === String(CU.empId); // ใบลาของตัวเอง
     const wrap = document.createElement('div');
@@ -2507,7 +2558,7 @@ function exportLeaveListExcel() {
     'ครึ่งวัน'     : r.halfDay ? 'ใช่' : '',
     'สถานะ'        : r.status,
     'เหตุผล'       : r.reason,
-    'ผู้อนุมัติ'    : r.approvedBy || '',
+    'ผู้อนุมัติ'    : r.approver || '',
     'วันที่อนุมัติ' : r.approvedAt || ''
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
