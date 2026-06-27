@@ -1572,7 +1572,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbxIjM6sUZbd292LPKPEJMiLOMaT6bQIaPZ47BQS59GtdH256i5xvBNJ-PsziZdXMZjs/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzOZy_YcP9srwO3AnHqlsRurQc7Ks7bknHWLBr0Mnxy1FJOgmHpc-hrxDVzEqqPJeTJ/exec"; 
 
 let CURRENT_USER = null;
 
@@ -3453,7 +3453,7 @@ function renderEmpList() {
       ? '<img src="' + e.photoUrl + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;flex&quot;">' +
         '<div style="display:none;width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">' + initials + '</div>'
       : '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">' + initials + '</div>';
-    return '<div class="list-row" onclick="openEmpModal(\"' + e.empId + '\")">' +
+    return '<div class="list-row" onclick="openEmpModal(\'' + e.empId + '\')">' +
       avatarHtml +
       '<div class="row-info">' +
         '<div class="row-label">' + e.name +
