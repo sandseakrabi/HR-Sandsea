@@ -1853,34 +1853,45 @@ function startApp() {
   const llDept  = document.getElementById('ll-dept');
 
   if (CU.role === 'hr') {
-    // HR: เห็นใบลาทุกคนแบบ read-only ผ่าน approve-list-employee + filter
-    if (leaderSection)       leaderSection.style.display       = 'none';
-    if (filterRow)           filterRow.style.display           = 'flex';
-    if (approveListEmp)      approveListEmp.style.display      = 'block';
-    if (leaveSummarySection) leaveSummarySection.style.display = 'block';
-    if (leaveListSection)    leaveListSection.style.display    = 'block';
-    // HR: unlock แผนก
+    // HR: เห็นใบลาทุกคนผ่าน approve-list-employee + filter แต่ไม่มีสิทธิ์อนุมัติ
+    if (leaderSection)        leaderSection.style.display        = 'none';
+    if (filterRow)            filterRow.style.display            = 'flex';
+    if (approveListEmp)       approveListEmp.style.display       = 'block';
+    if (leaveSummarySection)  leaveSummarySection.style.display  = 'block';
+    if (leaveListSection)     leaveListSection.style.display     = 'block';
+    // HR: unlock แผนกทุกแผนก
     if (sumDept) { sumDept.disabled = false; sumDept.value = 'ALL'; }
     if (llDept)  { llDept.disabled  = false; llDept.value  = 'ALL'; }
 
   } else if (CU.role === 'leader') {
-    // Leader: อนุมัติใบลาทันที + ดูสรุปวันลา
-    if (leaderSection)       leaderSection.style.display       = 'block';
-    if (filterRow)           filterRow.style.display           = 'none';
-    if (approveListEmp)      approveListEmp.style.display      = 'none';
-    if (leaveSummarySection) leaveSummarySection.style.display = 'block';
-    if (leaveListSection)    leaveListSection.style.display    = 'block';
-    // Lock แผนกให้เป็นแผนกของ Leader เท่านั้น
+    // Leader: อนุมัติใบลา employee ในแผนกตัวเอง + ดูสรุปวันลา
+    if (leaderSection)        leaderSection.style.display        = 'block';
+    if (filterRow)            filterRow.style.display            = 'none';
+    if (approveListEmp)       approveListEmp.style.display       = 'none';
+    if (leaveSummarySection)  leaveSummarySection.style.display  = 'block';
+    if (leaveListSection)     leaveListSection.style.display     = 'block';
+    // Lock แผนกของ Leader
     if (sumDept) { sumDept.value = CU.dept; sumDept.disabled = true; sumDept.style.opacity='0.7'; sumDept.style.cursor='not-allowed'; }
     if (llDept)  { llDept.value  = CU.dept; llDept.disabled  = true; llDept.style.opacity='0.7'; llDept.style.cursor='not-allowed'; }
 
+  } else if (CU.role === 'gm') {
+    // GM: เห็นใบลาที่ leader อนุมัติมาแล้ว (ไม่เห็นใบลา employee โดยตรง) + สรุปวันลา
+    if (leaderSection)        leaderSection.style.display        = 'block';
+    if (filterRow)            filterRow.style.display            = 'none';
+    if (approveListEmp)       approveListEmp.style.display       = 'none';
+    if (leaveSummarySection)  leaveSummarySection.style.display  = 'block';
+    if (leaveListSection)     leaveListSection.style.display     = 'block';
+    // GM: unlock แผนกทุกแผนก
+    if (sumDept) { sumDept.disabled = false; sumDept.value = 'ALL'; }
+    if (llDept)  { llDept.disabled  = false; llDept.value  = 'ALL'; }
+
   } else {
-    // gm / employee: เห็นใบลาของตัวเองผ่าน filter-row + approve-list-employee
-    if (leaderSection)       leaderSection.style.display       = 'none';
-    if (filterRow)           filterRow.style.display           = 'flex';
-    if (approveListEmp)      approveListEmp.style.display      = 'block';
-    if (leaveSummarySection) leaveSummarySection.style.display = 'none';
-    if (leaveListSection)    leaveListSection.style.display    = 'none';
+    // employee: เห็นแค่ใบลาของตัวเองผ่าน filter-row
+    if (leaderSection)        leaderSection.style.display        = 'none';
+    if (filterRow)            filterRow.style.display            = 'flex';
+    if (approveListEmp)       approveListEmp.style.display       = 'block';
+    if (leaveSummarySection)  leaveSummarySection.style.display  = 'none';
+    if (leaveListSection)     leaveListSection.style.display     = 'none';
   }
 
   // ตั้งค่า default วันที่
@@ -2260,8 +2271,9 @@ function filterLeave(status, btn) {
 }
 
 function renderApproveList(rows) {
-  // leader ใช้ approve-list ใน leader-approve-section, role อื่นใช้ approve-list-employee
-  const elId = CU.role === 'leader' ? 'approve-list' : 'approve-list-employee';
+  // leader และ gm ใช้ approve-list ใน leader-approve-section
+  // hr และ employee ใช้ approve-list-employee
+  const elId = (CU.role === 'leader' || CU.role === 'gm') ? 'approve-list' : 'approve-list-employee';
   const el = document.getElementById(elId);
   if (!el) return;
   if (!rows.length) { el.innerHTML='<div class="empty-state"><p>ไม่มีรายการ</p></div>'; return; }
@@ -2293,8 +2305,8 @@ function renderApproveList(rows) {
         attach +
       '</div>' +
       '<span class="badge ' + badgeCls + '">' + r.status + '</span>';
-    // คลิกที่ row เพื่อเปิด modal อนุมัติ (เฉพาะ role ที่มีสิทธิ์)
-    if (CU.role !== 'employee') {
+    // คลิกที่ row เพื่อเปิด modal อนุมัติ (เฉพาะ role ที่มีสิทธิ์ ไม่รวม hr และ employee)
+    if (CU.role !== 'employee' && CU.role !== 'hr') {
       row.style.cursor = 'pointer';
       row.addEventListener('click', function() { openApproveModal(r.id); });
     }
@@ -2434,7 +2446,7 @@ function submitEditLeave() {
 }
 
 function openApproveModal(id) {
-  if (CU.role==='employee') { toast('คุณไม่มีสิทธิ์อนุมัติ'); return; }
+  if (CU.role==='employee' || CU.role==='hr') { toast('คุณไม่มีสิทธิ์อนุมัติ'); return; }
   const r = allLeaveReqs.find(x=>x.id===id); if (!r) return;
   currentLeaveId = id;
   document.getElementById('approve-note').value = '';
