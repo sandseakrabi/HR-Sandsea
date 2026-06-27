@@ -1698,7 +1698,7 @@ function startApp() {
     if (summarySection)   summarySection.style.display   = 'block';
     if (leaveListSection) leaveListSection.style.display = 'block';
     if (filterRow)        filterRow.style.display        = 'none';
-    if (approveList)      approveList.style.display      = 'none';
+    // ไม่ซ่อน approve-list เพราะมันอยู่ใน leader-approve-section แล้ว
     // Lock แผนกให้เป็นแผนกของ Leader เท่านั้น เปลี่ยนไม่ได้
     const sumDept = document.getElementById('sum-dept');
     const llDept  = document.getElementById('ll-dept');
