@@ -2078,7 +2078,19 @@ function filterLeave(status, btn) {
 function renderApproveList(rows) {
   const el = document.getElementById('approve-list');
   if (!rows.length) { el.innerHTML='<div class="empty-state"><p>ไม่มีรายการ</p></div>'; return; }
-  el.innerHTML = rows.map(r => `
+  const isLeader = CU.role === 'leader';
+  el.innerHTML = rows.map(r => {
+    const isPending = r.status === 'รออนุมัติ';
+    const actionBtns = (isLeader && isPending) ? `
+      <div style="display:flex;gap:6px;padding:0 16px 12px;margin-top:-4px" onclick="event.stopPropagation()">
+        <button onclick="leaderEditLeave('${r.id}')"
+          style="flex:1;background:#dbeafe;color:#1d4ed8;border:none;border-radius:9px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif">
+          ✏️ แก้ไข</button>
+        <button onclick="leaderCancelLeave('${r.id}','${r.empName.replace(/'/g,\"&#39;\")}')"
+          style="flex:1;background:#fee2e2;color:#dc2626;border:none;border-radius:9px;padding:7px 0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif">
+          🗑 ยกเลิก</button>
+      </div>` : '';
+    return `
     <div class="card" style="margin-bottom:10px">
       <div class="list-row" style="align-items:flex-start" onclick="openApproveModal('${r.id}')">
         <div class="avatar" style="background:#dbeafe;color:#1d4ed8">${r.empName.substring(0,2)}</div>
@@ -2094,7 +2106,42 @@ function renderApproveList(rows) {
         </div>
         <span class="badge ${r.status==='รออนุมัติ'?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger'}">${r.status}</span>
       </div>
-    </div>`).join('');
+      ${actionBtns}
+    </div>`;
+  }).join('');
+}
+
+// ── Leader: ยกเลิกใบลาของลูกน้อง ──
+function leaderCancelLeave(leaveId, empName) {
+  if (!confirm('ยืนยันยกเลิกใบลาของ ' + empName + '?')) return;
+  const r = allLeaveReqs.find(x => x.id === leaveId);
+  callServerAPI('deleteLeaveRequest', { leaveId, empId: r ? r.empId : '', byLeader: true, leaderEmpId: CU.empId }, res => {
+    if (!res || !res.success) { toast('⚠️ ' + (res && res.message || 'ยกเลิกไม่สำเร็จ')); return; }
+    toast('ยกเลิกใบลาสำเร็จ');
+    loadLeaveRequests();
+    loadDashboard();
+  });
+}
+
+// ── Leader: แก้ไขใบลาของลูกน้อง ──
+let _editLeaveOwnerEmpId = '';
+let _editLeaveId = '';
+function leaderEditLeave(leaveId) {
+  const r = allLeaveReqs.find(x => x.id === leaveId);
+  if (!r) { toast('ไม่พบคำขอ'); return; }
+  _editLeaveId = leaveId;
+  _editLeaveOwnerEmpId = r.empId;
+
+  document.getElementById('edit-leave-title').textContent  = 'แก้ไข: ' + r.empName + ' · ' + r.type;
+  document.getElementById('edit-leave-start').value        = r.startDate || '';
+  document.getElementById('edit-leave-end').value          = r.endDate   || r.startDate || '';
+  document.getElementById('edit-leave-reason').value       = r.reason    || '';
+  document.getElementById('edit-leave-days-hint').textContent = '';
+
+  const hideEnd = r.type === 'ลืมสแกนนิ้ว' || r.type === 'มาสาย' || r.type === 'ขาดงาน';
+  document.getElementById('edit-leave-end-wrap').style.display = hideEnd ? 'none' : 'block';
+
+  openModal('edit-leave-modal');
 }
 
 function renderMyLeave(rows) {
@@ -2133,12 +2180,11 @@ function deleteMyLeave(leaveId) {
 }
 
 // ── แก้ไขคำขอลา (เฉพาะ รออนุมัติ) ──
-let _editLeaveId = '';
-
 function openEditLeaveModal(leaveId) {
   const r = allLeaveReqs.find(x => x.id === leaveId);
   if (!r) { toast('ไม่พบคำขอ'); return; }
   _editLeaveId = leaveId;
+  _editLeaveOwnerEmpId = '';  // employee แก้ไขตัวเอง → ใช้ CU.empId
 
   document.getElementById('edit-leave-title').textContent  = 'แก้ไข: ' + r.type;
   document.getElementById('edit-leave-start').value        = r.startDate || '';
@@ -2162,7 +2208,9 @@ function submitEditLeave() {
   if (!reason) { toast('กรุณาระบุเหตุผล'); return; }
   const days = _daysBetween(start, end);
 
-  callServerAPI('editLeaveRequest', { leaveId: _editLeaveId, empId: CU.empId, start, end, days, reason }, res => {
+  // ถ้า leader แก้ไขใบลาลูกน้อง ใช้ empId เจ้าของใบลา ไม่ใช่ CU.empId
+  const editEmpId = _editLeaveOwnerEmpId || CU.empId;
+  callServerAPI('editLeaveRequest', { leaveId: _editLeaveId, empId: editEmpId, byLeader: CU.role === 'leader', leaderEmpId: CU.empId, start, end, days, reason }, res => {
     if (!res || !res.success) { toast('⚠️ ' + (res && res.message || 'แก้ไขไม่สำเร็จ')); return; }
     closeModal('edit-leave-modal');
     toast('แก้ไขคำขอสำเร็จ');
