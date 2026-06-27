@@ -860,35 +860,7 @@ body{
       <div style="height:16px"></div>
     </div>
 
-
-
-    <!-- ── filter + list (สำหรับ role ที่ไม่ใช่ HR/leader) ── -->
-    <div id="filter-row" style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
-      <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
-      <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
-      <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
-      <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
-    </div>
-    <div id="approve-list-employee"><div class="loading">กำลังโหลด...</div></div>
-  </div>
-
-  <!-- HR -->
-  <div id="page-hr" class="page">
-    <!-- Action bar -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap">
-      <input class="form-input" id="emp-search" type="text" placeholder="🔍 ค้นหาชื่อ / รหัส / แผนก" style="flex:1;min-width:180px;margin:0" oninput="filterEmpList()">
-      <button class="btn btn-primary btn-sm" onclick="openEmpModal(null)" style="white-space:nowrap">+ เพิ่มพนักงาน</button>
-    </div>
-
-    <!-- filter แสดง active/all -->
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <button class="btn btn-primary btn-sm" id="empf-active" onclick="setEmpFilter('active',this)">พนักงานปัจจุบัน</button>
-      <button class="btn btn-outline btn-sm" id="empf-all" onclick="setEmpFilter('all',this)">ทั้งหมด</button>
-    </div>
-
-
-
-    <!-- ── สรุปวันลา (เฉพาะ HR) ── -->
+    <!-- ── สรุปวันลา (HR / Leader / GM — employee จะถูกซ่อนผ่าน JS ใน startApp) ── -->
     <div id="leave-summary-section">
       <div class="card" style="margin-bottom:14px">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleSummaryPanel()">
@@ -939,7 +911,7 @@ body{
       </div>
     </div>
 
-    <!-- ── ใบลา collapsible (เฉพาะ HR) ── -->
+    <!-- ── ใบลา collapsible (HR / Leader / GM — employee จะถูกซ่อนผ่าน JS ใน startApp) ── -->
     <div id="leave-list-section">
       <div class="card" style="margin-bottom:14px">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleLeaveListPanel()">
@@ -997,6 +969,30 @@ body{
           <div id="leavelist-result" style="padding:0 0 8px"></div>
         </div>
       </div>
+    </div>
+
+    <!-- ── filter + list (สำหรับ role ที่ไม่ใช่ HR/leader) ── -->
+    <div id="filter-row" style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
+      <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
+      <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
+      <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
+      <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
+    </div>
+    <div id="approve-list-employee"><div class="loading">กำลังโหลด...</div></div>
+  </div>
+
+  <!-- HR -->
+  <div id="page-hr" class="page">
+    <!-- Action bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+      <input class="form-input" id="emp-search" type="text" placeholder="🔍 ค้นหาชื่อ / รหัส / แผนก" style="flex:1;min-width:180px;margin:0" oninput="filterEmpList()">
+      <button class="btn btn-primary btn-sm" onclick="openEmpModal(null)" style="white-space:nowrap">+ เพิ่มพนักงาน</button>
+    </div>
+
+    <!-- filter แสดง active/all -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-primary btn-sm" id="empf-active" onclick="setEmpFilter('active',this)">พนักงานปัจจุบัน</button>
+      <button class="btn btn-outline btn-sm" id="empf-all" onclick="setEmpFilter('all',this)">ทั้งหมด</button>
     </div>
 
     <!-- รายชื่อพนักงาน -->
@@ -1576,7 +1572,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbzOZy_YcP9srwO3AnHqlsRurQc7Ks7bknHWLBr0Mnxy1FJOgmHpc-hrxDVzEqqPJeTJ/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxIjM6sUZbd292LPKPEJMiLOMaT6bQIaPZ47BQS59GtdH256i5xvBNJ-PsziZdXMZjs/exec"; 
 
 let CURRENT_USER = null;
 
