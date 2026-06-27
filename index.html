@@ -3350,7 +3350,7 @@ function renderEmpList() {
     const activeBadge = e.active
       ? '<span class="badge badge-success" style="font-size:10px">active</span>'
       : '<span class="badge badge-danger" style="font-size:10px">inactive</span>';
-    return '<div class="list-row" onclick="openEmpModal('' + e.empId + '')">' +
+    return '<div class="list-row" onclick="openEmpModal(\"' + e.empId + '\")">' +
       '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;' +
       'display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">' + initials + '</div>' +
       '<div class="row-info">' +
@@ -3451,8 +3451,7 @@ function submitEmpForm() {
 function confirmDeactivate() {
   if (!_editEmpId) return;
   const e = _allEmployees.find(x => x.empId === _editEmpId);
-  if (!confirm('ยืนยันปิดใช้งาน ' + (e ? e.name : _editEmpId) + '?
-(พนักงานจะล็อกอินไม่ได้ แต่ข้อมูลยังคงอยู่)')) return;
+  if (!confirm('ยืนยันปิดใช้งาน ' + (e ? e.name : _editEmpId) + '? (พนักงานจะล็อกอินไม่ได้ แต่ข้อมูลยังคงอยู่)')) return;
   callServerAPI('deactivateEmployee', { empId: _editEmpId, callerRole: CU.role }, function(res) {
     if (!res || !res.success) { toast('⚠️ ' + (res && res.message || 'ไม่สำเร็จ')); return; }
     closeModal('emp-modal');
