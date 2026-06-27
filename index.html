@@ -981,8 +981,20 @@ body{
 
   <!-- HR -->
   <div id="page-hr" class="page">
-    <div class="card">
-      <div class="card-header"><div class="card-title">จัดการ HR</div></div>
+    <!-- Action bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+      <input class="form-input" id="emp-search" type="text" placeholder="🔍 ค้นหาชื่อ / รหัส / แผนก" style="flex:1;min-width:180px;margin:0" oninput="filterEmpList()">
+      <button class="btn btn-primary btn-sm" onclick="openEmpModal(null)" style="white-space:nowrap">+ เพิ่มพนักงาน</button>
+    </div>
+
+    <!-- filter แสดง active/all -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-primary btn-sm" id="empf-active" onclick="setEmpFilter('active',this)">พนักงานปัจจุบัน</button>
+      <button class="btn btn-outline btn-sm" id="empf-all" onclick="setEmpFilter('all',this)">ทั้งหมด</button>
+    </div>
+
+    <!-- Export -->
+    <div class="card" style="margin-bottom:12px">
       <div class="list-row" onclick="openModal('export-modal')">
         <div class="icon-box ib-green">
           <svg><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -992,12 +1004,14 @@ body{
         <div class="row-arrow"><svg viewBox="0 0 16 16"><polyline points="6 4 10 8 6 12"/></svg></div>
       </div>
     </div>
+
+    <!-- รายชื่อพนักงาน -->
     <div class="card">
-      <div class="card-header"><div class="card-title">วิธีเพิ่มพนักงาน</div></div>
-      <div class="card-body" style="font-size:13px;color:var(--muted);line-height:1.8">
-        เปิด Sheet <b style="color:var(--text)">EMPLOYEES</b> แล้วเพิ่มแถวใหม่<br>
-        กะของโรงแรม: A=06-16 · B=08-18 · C=10-20 · D=12-22 · E=21-07 · F=07-17 · F(รปภ.)=08-20 · G(รปภ.)=20-08 · O=-
+      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+        <div class="card-title">รายชื่อพนักงาน</div>
+        <div id="emp-count" style="font-size:12px;color:var(--muted)"></div>
       </div>
+      <div id="emp-list-wrap"><div class="loading" style="padding:20px;text-align:center;color:var(--muted)">กำลังโหลด...</div></div>
     </div>
   </div>
 
@@ -1036,6 +1050,119 @@ body{
   </div><!-- /desktop-layout -->
 
 </div><!-- /app-screen -->
+
+<!-- ═══ MODAL: เพิ่ม/แก้ไขพนักงาน (HR) ═══ -->
+<div class="modal-overlay" id="emp-modal">
+  <div class="modal-sheet" style="max-height:95vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="emp-modal-title">เพิ่มพนักงาน</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">รหัสพนักงาน *</label>
+        <input class="form-input" id="emp-f-id" type="text" placeholder="เช่น 1001">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ชื่อ-นามสกุล *</label>
+        <input class="form-input" id="emp-f-name" type="text" placeholder="ชื่อเต็ม">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">แผนก *</label>
+        <select class="form-select" id="emp-f-dept">
+          <option value="">— เลือกแผนก —</option>
+          <option>ACC</option><option>HR</option><option>GSA</option>
+          <option>RSVN</option><option>F&amp;B</option>
+          <option>Sales Marketing</option><option>HK</option>
+          <option>EN</option><option>KC</option>
+          <option>Amazon</option><option>GM</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">แผนกย่อย</label>
+        <input class="form-input" id="emp-f-subdept" type="text" placeholder="(ถ้ามี)">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">ตำแหน่ง</label>
+        <input class="form-input" id="emp-f-position" type="text" placeholder="เช่น Receptionist">
+      </div>
+      <div class="form-group">
+        <label class="form-label">บทบาท *</label>
+        <select class="form-select" id="emp-f-role">
+          <option value="employee">employee</option>
+          <option value="leader">leader</option>
+          <option value="hr">hr</option>
+          <option value="gm">gm</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">วันเริ่มงาน</label>
+        <input class="form-input" id="emp-f-start" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">สิทธิ์ลาพักร้อน (วัน/ปี)</label>
+        <input class="form-input" id="emp-f-annual" type="number" min="0" value="10">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">ยกยอดพักร้อน (วัน)</label>
+        <input class="form-input" id="emp-f-carry-annual" type="number" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ยกยอดนักขัตฤกษ์ (วัน)</label>
+        <input class="form-input" id="emp-f-carry-holiday" type="number" min="0" value="0">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">วันหยุดหลัก</label>
+        <input class="form-input" id="emp-f-offmain" type="text" placeholder="อาทิตย์">
+      </div>
+      <div class="form-group">
+        <label class="form-label">วันหยุดสำรอง</label>
+        <input class="form-input" id="emp-f-offalt" type="text" placeholder="เสาร์">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ประเภทสัปดาห์</label>
+        <input class="form-input" id="emp-f-offweek" type="text" placeholder="A">
+      </div>
+    </div>
+
+    <div class="form-group" id="emp-f-pw-wrap">
+      <label class="form-label">รหัสผ่านเริ่มต้น <span style="font-weight:400;color:var(--muted)">(ปล่อยว่างเพื่อใช้รหัสพนักงาน)</span></label>
+      <input class="form-input" id="emp-f-pw" type="password" placeholder="ตั้งรหัสผ่านใหม่">
+    </div>
+
+    <div id="emp-f-active-wrap" class="toggle-row" style="display:none">
+      <span style="font-size:14px;font-weight:500">สถานะใช้งาน (Active)</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="emp-f-active" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-outline" onclick="closeModal('emp-modal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="submitEmpForm()">บันทึก</button>
+    </div>
+
+    <!-- ปุ่มปิดใช้งาน (แสดงเฉพาะตอน edit) -->
+    <div id="emp-deactivate-wrap" style="display:none;margin-top:10px">
+      <button class="btn btn-danger" onclick="confirmDeactivate()">ปิดใช้งานพนักงานคนนี้</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MODAL: แจ้งลา (ทั่วไป) ═══ -->
 <div class="modal-overlay" id="leave-modal">
@@ -1443,7 +1570,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycby9mtaQ2fr2fhytC-hB2kQ2j5N9XxFAAodaNvavT71bqZr0A7zwmRZp-CTCOr-cKJoS/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbx16Qx2pV5faQ0CV2PHBqj_-DPw51D8bn0eMjiN70LKwq8_4tGi8nOKlEqOelmlEGNN/exec"; 
 
 let CURRENT_USER = null;
 
@@ -1836,6 +1963,7 @@ function switchPage(name) {
   const dc = document.querySelector('.desktop-content');
   if (dc) dc.scrollTop = 0;
   if (name === 'schedule') initSchedulePage();
+  if (name === 'hr') loadEmployeeList();
 }
 
 // ══ LEAVE MODAL ══
@@ -3161,6 +3289,179 @@ function exportScheduleExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
   XLSX.writeFile(wb, 'Schedule_' + dept + '_' + month + '.xlsx');
 }
+
+// ══════════════════════════════════════════════════════════════
+//  EMPLOYEE MANAGEMENT (HR only)
+// ══════════════════════════════════════════════════════════════
+var _allEmployees = [];
+var _empFilter = 'active';
+var _editEmpId = null;  // null = add mode, string = edit mode
+
+// โหลดเมื่อเปิดหน้า HR
+function loadEmployeeList() {
+  callServerAPI('getEmployees', { callerRole: CU.role }, function(res) {
+    if (!res || !res.success) {
+      document.getElementById('emp-list-wrap').innerHTML =
+        '<div style="padding:16px;color:var(--danger)">โหลดข้อมูลไม่สำเร็จ</div>';
+      return;
+    }
+    _allEmployees = res.list || [];
+    renderEmpList();
+  });
+}
+
+function setEmpFilter(f, btn) {
+  _empFilter = f;
+  document.querySelectorAll('#empf-active,#empf-all').forEach(b => {
+    b.className = 'btn btn-outline btn-sm';
+  });
+  if (btn) btn.className = 'btn btn-primary btn-sm';
+  renderEmpList();
+}
+
+function filterEmpList() { renderEmpList(); }
+
+function renderEmpList() {
+  const q = (document.getElementById('emp-search').value || '').toLowerCase();
+  let list = _allEmployees;
+  if (_empFilter === 'active') list = list.filter(e => e.active);
+  if (q) {
+    list = list.filter(e =>
+      e.empId.toLowerCase().includes(q) ||
+      e.name.toLowerCase().includes(q) ||
+      (e.dept||'').toLowerCase().includes(q) ||
+      (e.position||'').toLowerCase().includes(q)
+    );
+  }
+  document.getElementById('emp-count').textContent = list.length + ' คน';
+
+  if (!list.length) {
+    document.getElementById('emp-list-wrap').innerHTML =
+      '<div style="padding:20px;text-align:center;color:var(--muted)">ไม่พบข้อมูล</div>';
+    return;
+  }
+
+  const roleColor = { hr:'var(--info)', gm:'var(--warn)', leader:'var(--success)', employee:'var(--muted)' };
+
+  const rows = list.map(e => {
+    const initials = e.name.trim().charAt(0);
+    const roleBadge = '<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#f3f4f6;color:' +
+      (roleColor[e.role]||'var(--muted)') + ';font-weight:600">' + e.role + '</span>';
+    const activeBadge = e.active
+      ? '<span class="badge badge-success" style="font-size:10px">active</span>'
+      : '<span class="badge badge-danger" style="font-size:10px">inactive</span>';
+    return '<div class="list-row" onclick="openEmpModal('' + e.empId + '')">' +
+      '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;' +
+      'display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">' + initials + '</div>' +
+      '<div class="row-info">' +
+        '<div class="row-label">' + e.name +
+          ' <span style="font-size:11px;color:var(--muted)">(' + e.empId + ')</span></div>' +
+        '<div class="row-sub" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">' +
+          e.dept + (e.subDept?' · '+e.subDept:'') + (e.position?' · '+e.position:'') +
+          ' &nbsp;' + roleBadge + ' ' + activeBadge +
+        '</div>' +
+      '</div>' +
+      '<div class="row-arrow"><svg viewBox="0 0 16 16"><polyline points="6 4 10 8 6 12"/></svg></div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('emp-list-wrap').innerHTML = rows;
+}
+
+// เปิด modal เพิ่ม (empId=null) หรือแก้ไข (empId=string)
+function openEmpModal(empId) {
+  _editEmpId = empId;
+  const isEdit = !!empId;
+  document.getElementById('emp-modal-title').textContent = isEdit ? 'แก้ไขข้อมูลพนักงาน' : 'เพิ่มพนักงานใหม่';
+  document.getElementById('emp-deactivate-wrap').style.display = isEdit ? 'block' : 'none';
+  document.getElementById('emp-f-active-wrap').style.display   = isEdit ? 'flex' : 'none';
+  document.getElementById('emp-f-id').readOnly = isEdit; // ห้ามเปลี่ยน empId ตอน edit
+
+  if (isEdit) {
+    const e = _allEmployees.find(x => x.empId === empId);
+    if (!e) { toast('ไม่พบข้อมูลพนักงาน'); return; }
+    document.getElementById('emp-f-id').value          = e.empId;
+    document.getElementById('emp-f-name').value        = e.name;
+    document.getElementById('emp-f-dept').value        = e.dept;
+    document.getElementById('emp-f-subdept').value     = e.subDept  || '';
+    document.getElementById('emp-f-position').value    = e.position || '';
+    document.getElementById('emp-f-role').value        = e.role;
+    document.getElementById('emp-f-start').value       = e.startDate || '';
+    document.getElementById('emp-f-annual').value      = e.annualLeave;
+    document.getElementById('emp-f-carry-annual').value  = e.carryAnnual;
+    document.getElementById('emp-f-carry-holiday').value = e.carryHoliday;
+    document.getElementById('emp-f-offmain').value     = e.offMain  || 'อาทิตย์';
+    document.getElementById('emp-f-offalt').value      = e.offAlt   || 'เสาร์';
+    document.getElementById('emp-f-offweek').value     = e.offWeekType || 'A';
+    document.getElementById('emp-f-pw').value          = '';
+    document.getElementById('emp-f-active').checked    = e.active;
+  } else {
+    // เคลียร์ฟอร์ม
+    ['emp-f-id','emp-f-name','emp-f-subdept','emp-f-position','emp-f-start','emp-f-pw'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('emp-f-dept').value        = '';
+    document.getElementById('emp-f-role').value        = 'employee';
+    document.getElementById('emp-f-annual').value      = 10;
+    document.getElementById('emp-f-carry-annual').value  = 0;
+    document.getElementById('emp-f-carry-holiday').value = 0;
+    document.getElementById('emp-f-offmain').value     = 'อาทิตย์';
+    document.getElementById('emp-f-offalt').value      = 'เสาร์';
+    document.getElementById('emp-f-offweek').value     = 'A';
+    document.getElementById('emp-f-active').checked    = true;
+  }
+  openModal('emp-modal');
+}
+
+function submitEmpForm() {
+  const empId   = document.getElementById('emp-f-id').value.trim();
+  const name    = document.getElementById('emp-f-name').value.trim();
+  const dept    = document.getElementById('emp-f-dept').value.trim();
+  const role    = document.getElementById('emp-f-role').value;
+  if (!empId || !name || !dept || !role) {
+    toast('กรุณากรอกข้อมูลที่จำเป็น (รหัส, ชื่อ, แผนก, บทบาท)');
+    return;
+  }
+  const payload = {
+    callerRole   : CU.role,
+    empId,
+    name,
+    dept,
+    subDept      : document.getElementById('emp-f-subdept').value.trim(),
+    position     : document.getElementById('emp-f-position').value.trim(),
+    role,
+    startDate    : document.getElementById('emp-f-start').value,
+    annualLeave  : Number(document.getElementById('emp-f-annual').value || 0),
+    carryAnnual  : Number(document.getElementById('emp-f-carry-annual').value || 0),
+    carryHoliday : Number(document.getElementById('emp-f-carry-holiday').value || 0),
+    offMain      : document.getElementById('emp-f-offmain').value.trim() || 'อาทิตย์',
+    offAlt       : document.getElementById('emp-f-offalt').value.trim()  || 'เสาร์',
+    offWeekType  : document.getElementById('emp-f-offweek').value.trim() || 'A',
+    password     : document.getElementById('emp-f-pw').value || '',
+    active       : document.getElementById('emp-f-active').checked
+  };
+  callServerAPI('saveEmployee', payload, function(res) {
+    if (!res || !res.success) { toast('⚠️ ' + (res && res.message || 'บันทึกไม่สำเร็จ')); return; }
+    closeModal('emp-modal');
+    toast(res.message || 'บันทึกสำเร็จ');
+    loadEmployeeList();
+  });
+}
+
+function confirmDeactivate() {
+  if (!_editEmpId) return;
+  const e = _allEmployees.find(x => x.empId === _editEmpId);
+  if (!confirm('ยืนยันปิดใช้งาน ' + (e ? e.name : _editEmpId) + '?
+(พนักงานจะล็อกอินไม่ได้ แต่ข้อมูลยังคงอยู่)')) return;
+  callServerAPI('deactivateEmployee', { empId: _editEmpId, callerRole: CU.role }, function(res) {
+    if (!res || !res.success) { toast('⚠️ ' + (res && res.message || 'ไม่สำเร็จ')); return; }
+    closeModal('emp-modal');
+    toast(res.message || 'ปิดใช้งานสำเร็จ');
+    loadEmployeeList();
+  });
+}
+// ══════════════════════════════════════════════════════════════
+
 // ── Fetch API สำหรับติดต่อ Google Apps Script Web App ──
 var _apiInFlight = 0; // นับจำนวน request ที่กำลังทำงานอยู่ (var เพื่อ hoist ป้องกัน TDZ)
 
