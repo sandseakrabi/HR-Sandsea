@@ -846,6 +846,18 @@ body{
 
     </div>
 
+    <!-- ── รายการใบลา (สำหรับ leader) แสดงทันทีไม่ต้องค้นหา ── -->
+    <div id="leader-approve-section" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
+        <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
+      </div>
+      <div id="approve-list"><div class="loading">กำลังโหลด...</div></div>
+      <div style="height:16px"></div>
+    </div>
+
     <!-- ── สรุปวันลา (เฉพาะ HR) ── -->
     <div id="leave-summary-section" style="display:none">
       <div class="card" style="margin-bottom:14px">
@@ -957,14 +969,14 @@ body{
       </div>
     </div>
 
-    <!-- ── filter + list (สำหรับ role ที่ไม่ใช่ HR) ── -->
+    <!-- ── filter + list (สำหรับ role ที่ไม่ใช่ HR/leader) ── -->
     <div id="filter-row" style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
       <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
       <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
       <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
       <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
     </div>
-    <div id="approve-list"><div class="loading">กำลังโหลด...</div></div>
+    <div id="approve-list-employee"><div class="loading">กำลังโหลด...</div></div>
   </div>
 
   <!-- HR -->
@@ -1680,12 +1692,14 @@ function startApp() {
     if (sumDept) { sumDept.disabled = false; sumDept.value = 'ALL'; }
     if (llDept)  { llDept.disabled  = false; llDept.value  = 'ALL'; }
   } else if (CU.role === 'leader') {
-    // Manager: แสดง section เหมือน HR แต่บังคับแผนกตัวเอง
+    // Leader: แสดงรายการใบลาทันที (บน) + สรุปวันลา + ใบลา (ล่าง ไว้ดึงรายงาน)
+    const leaderSection = document.getElementById('leader-approve-section');
+    if (leaderSection)    leaderSection.style.display    = 'block';
     if (summarySection)   summarySection.style.display   = 'block';
     if (leaveListSection) leaveListSection.style.display = 'block';
     if (filterRow)        filterRow.style.display        = 'none';
     if (approveList)      approveList.style.display      = 'none';
-    // Lock แผนกให้เป็นแผนกของ Manager เท่านั้น เปลี่ยนไม่ได้
+    // Lock แผนกให้เป็นแผนกของ Leader เท่านั้น เปลี่ยนไม่ได้
     const sumDept = document.getElementById('sum-dept');
     const llDept  = document.getElementById('ll-dept');
     if (sumDept) {
@@ -1706,7 +1720,8 @@ function startApp() {
     if (summarySection)   summarySection.style.display   = 'none';
     if (leaveListSection) leaveListSection.style.display = 'none';
     if (filterRow)        filterRow.style.display        = 'flex';
-    if (approveList)      approveList.style.display      = 'block';
+    const empList = document.getElementById('approve-list-employee');
+    if (empList) empList.style.display = 'block';
   }
 
   // ตั้งค่า default วันที่
@@ -2070,13 +2085,18 @@ function loadLeaveRequests() {
 }
 
 function filterLeave(status, btn) {
-  document.querySelectorAll('#filter-row .btn').forEach(b => b.className='btn btn-outline btn-sm');
+  // อัปเดต active button ในทั้ง filter-row และ leader-approve-section
+  const parentRow = btn.closest('div');
+  parentRow.querySelectorAll('.btn').forEach(b => b.className='btn btn-outline btn-sm');
   btn.className = 'btn btn-primary btn-sm';
   renderApproveList(status==='all' ? allLeaveReqs : allLeaveReqs.filter(r=>r.status===status));
 }
 
 function renderApproveList(rows) {
-  const el = document.getElementById('approve-list');
+  // leader ใช้ approve-list ใน leader-approve-section, role อื่นใช้ approve-list-employee
+  const elId = CU.role === 'leader' ? 'approve-list' : 'approve-list-employee';
+  const el = document.getElementById(elId);
+  if (!el) return;
   if (!rows.length) { el.innerHTML='<div class="empty-state"><p>ไม่มีรายการ</p></div>'; return; }
   el.innerHTML = '';
   rows.forEach(r => {
