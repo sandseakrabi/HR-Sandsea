@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -506,7 +505,7 @@ body{
   <div class="topbar">
     <!-- Mobile: avatar ลอยมุมขวาบน -->
     <div class="topbar-avatar topbar-av-mobile" id="user-avatar-mobile" onclick="doLogout()">
-      <img class="av-img" src="" alt="">
+      <img class="av-img" src="" alt="" onerror="this.style.display='none';this.nextSibling.style.display='block'">
       <svg class="av-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="8" r="4.5"/><path d="M3 22c0-5 3.6-9 9-9s9 4 9 9"/>
       </svg>
@@ -518,7 +517,7 @@ body{
       <div class="topbar-user" onclick="doLogout()">
         <!-- Desktop: avatar อยู่เหนือชื่อ -->
         <div class="topbar-avatar topbar-av-desktop" id="user-avatar-desktop">
-          <img class="av-img" src="" alt="">
+          <img class="av-img" src="" alt="" onerror="this.style.display='none';this.nextSibling.style.display='block'">
           <svg class="av-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="8" r="4.5"/><path d="M3 22c0-5 3.6-9 9-9s9 4 9 9"/>
           </svg>
@@ -1123,6 +1122,15 @@ body{
     </div>
 
 
+    <!-- ── วันหยุดนักขัตฤกษ์ที่ใช้ไปแล้ว (เฉพาะเพิ่มพนักงานใหม่) ── -->
+    <div class="form-group" id="emp-f-holiday-used-wrap" style="display:none">
+      <label class="form-label">วันหยุดนักขัตฤกษ์ที่ใช้ไปแล้ว (ในปีปัจจุบัน)</label>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">ติ๊กวันหยุดที่พนักงานใช้สิทธิ์ไปแล้ว (ถ้าไม่ติ๊กเลยหมายความว่ายังไม่เคยลาในปีนี้)</div>
+      <div id="emp-f-holiday-list" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:#f9fafb">
+        <div style="color:var(--muted);font-size:13px;padding:4px">กำลังโหลดวันหยุด...</div>
+      </div>
+    </div>
+
     <!-- ── รูปโปรไฟล์ ── -->
     <div class="form-group">
       <label class="form-label">รูปโปรไฟล์</label>
@@ -1573,7 +1581,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbxIjM6sUZbd292LPKPEJMiLOMaT6bQIaPZ47BQS59GtdH256i5xvBNJ-PsziZdXMZjs/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxH3AZEMtVOmPArL89cmS-sI8YIqeksRhNC4MxfePAWU9fe9DPo6gzeCRU8V-IQls90/exec"; 
 
 let CURRENT_USER = null;
 
@@ -1766,10 +1774,16 @@ function _updateAvatar(photoUrl) {
     const img  = wrap.querySelector('.av-img');
     const icon = wrap.querySelector('.av-icon');
     if (directUrl && img) {
+      // reset onerror state ก่อน (กรณีเปลี่ยน user)
+      img.onerror = function() {
+        this.style.display = 'none';
+        if (icon) icon.style.display = 'block';
+      };
       img.src = directUrl;
       img.style.display = 'block';
       if (icon) icon.style.display = 'none';
     } else if (img) {
+      img.src = '';
       img.style.display = 'none';
       if (icon) icon.style.display = '';
     }
@@ -3515,6 +3529,9 @@ function openEmpModal(empId) {
   document.getElementById('emp-f-active-wrap').style.display   = isEdit ? 'flex' : 'none';
   document.getElementById('emp-f-id').readOnly = isEdit; // ห้ามเปลี่ยน empId ตอน edit
 
+  // แสดง/ซ่อน holiday-used section (เฉพาะเพิ่มพนักงานใหม่)
+  document.getElementById('emp-f-holiday-used-wrap').style.display = isEdit ? 'none' : 'block';
+
   if (isEdit) {
     const e = _allEmployees.find(x => x.empId === empId);
     if (!e) { toast('ไม่พบข้อมูลพนักงาน'); return; }
@@ -3545,8 +3562,37 @@ function openEmpModal(empId) {
     document.getElementById('emp-f-carry-annual').value  = 0;
     document.getElementById('emp-f-carry-holiday').value = 0;
     document.getElementById('emp-f-active').checked    = true;
+    // โหลดรายการวันหยุดนักขัตฤกษ์ปีนี้
+    _loadHolidaysForNewEmp();
   }
   openModal('emp-modal');
+}
+
+// โหลดวันหยุดนักขัตฤกษ์ปีนี้สำหรับหน้าเพิ่มพนักงานใหม่
+function _loadHolidaysForNewEmp() {
+  const listEl = document.getElementById('emp-f-holiday-list');
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px">กำลังโหลดวันหยุด...</div>';
+  // ใช้ HR001 เป็น dummy เพื่อดึง holidays ปีนี้ทั้งหมด (getHolidaysForLeave แสดงจากวันเริ่มงาน)
+  // แต่เราต้องการ holidays ปีนี้ทั้งหมด จึงเรียก getHolidaysAll แทน
+  callServerAPI('getHolidaysAll', {}, function(res) {
+    if (!res || !res.success || !res.list || !res.list.length) {
+      listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px">ไม่พบวันหยุดในปีปัจจุบัน</div>';
+      return;
+    }
+    const currentYear = new Date().getFullYear();
+    const holidays = res.list.filter(h => h.date && h.date.startsWith(String(currentYear)));
+    if (!holidays.length) {
+      listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px">ไม่พบวันหยุดในปีปัจจุบัน</div>';
+      return;
+    }
+    listEl.innerHTML = holidays.map(h =>
+      '<label style="display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)">' +
+        '<input type="checkbox" class="emp-holiday-check" value="' + h.date + '" style="width:16px;height:16px;cursor:pointer">' +
+        '<span style="font-weight:600;color:var(--navy);min-width:90px">' + h.date + '</span>' +
+        '<span style="color:var(--text)">' + h.name + '</span>' +
+      '</label>'
+    ).join('');
+  });
 }
 
 async function submitEmpForm() {
@@ -3586,7 +3632,8 @@ async function submitEmpForm() {
     carryHoliday : Number(document.getElementById('emp-f-carry-holiday').value || 0),
     password     : document.getElementById('emp-f-pw').value || '',
     active       : document.getElementById('emp-f-active').checked,
-    photoUrl
+    photoUrl,
+    usedHolidays : Array.from(document.querySelectorAll('.emp-holiday-check:checked')).map(c => c.value)
   };
   callServerAPI('saveEmployee', payload, function(res) {
     if (!res || !res.success) { toast('⚠️ ' + (res && res.message || 'บันทึกไม่สำเร็จ')); return; }
