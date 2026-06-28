@@ -92,6 +92,7 @@ body{
 }
 .topbar-avatar .av-img{width:100%;height:100%;object-fit:cover;display:none;}
 .topbar-avatar .av-icon{stroke:#fff;fill:none;}
+.topbar-avatar .av-initials{width:100%;height:100%;align-items:center;justify-content:center;}
 
 /* Mobile: รูปลอยมุมขวาบน */
 .topbar-av-mobile{
@@ -505,10 +506,11 @@ body{
   <div class="topbar">
     <!-- Mobile: avatar ลอยมุมขวาบน -->
     <div class="topbar-avatar topbar-av-mobile" id="user-avatar-mobile" onclick="doLogout()">
-      <img class="av-img" src="" alt="" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+      <img class="av-img" src="" alt="" onerror="this.style.display='none';this.nextSibling.style.display='none';this.nextSibling.nextSibling.style.display='flex'">
       <svg class="av-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="8" r="4.5"/><path d="M3 22c0-5 3.6-9 9-9s9 4 9 9"/>
       </svg>
+      <span class="av-initials" style="display:none;color:#fff;font-weight:700;font-size:20px;line-height:1"></span>
     </div>
 
     <div class="topbar-sub">Sandsea Resort · Railay Beach</div>
@@ -517,10 +519,11 @@ body{
       <div class="topbar-user" onclick="doLogout()">
         <!-- Desktop: avatar อยู่เหนือชื่อ -->
         <div class="topbar-avatar topbar-av-desktop" id="user-avatar-desktop">
-          <img class="av-img" src="" alt="" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+          <img class="av-img" src="" alt="" onerror="this.style.display='none';this.nextSibling.style.display='none';this.nextSibling.nextSibling.style.display='flex'">
           <svg class="av-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="8" r="4.5"/><path d="M3 22c0-5 3.6-9 9-9s9 4 9 9"/>
           </svg>
+          <span class="av-initials" style="display:none;color:#fff;font-weight:700;font-size:15px;line-height:1"></span>
         </div>
         <span id="user-display">—</span>
       </div>
@@ -1757,35 +1760,44 @@ function doChangePwModal() {
   });
 }
 // ── UPDATE AVATAR (รูปพนักงาน) ──
-function _updateAvatar(photoUrl) {
+function _updateAvatar(photoUrl, name) {
   // แปลง Google Drive sharing URL → direct thumbnail URL
-  // จาก: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-  // เป็น: https://drive.google.com/thumbnail?id=FILE_ID&sz=w400-h400
   let directUrl = photoUrl || '';
   if (directUrl) {
     const m = directUrl.match(/\/file\/d\/([^\/\?]+)/);
     if (m) directUrl = 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w400-h400';
   }
+  // ตัวอักษรย่อ (ใช้แทนรูปเมื่อโหลดไม่ได้)
+  const initial = (name || CU && CU.name || '?').trim().charAt(0).toUpperCase();
 
-  // อัปเดตทั้ง mobile avatar และ desktop avatar
   ['user-avatar-mobile', 'user-avatar-desktop'].forEach(function(id) {
     const wrap = document.getElementById(id);
     if (!wrap) return;
-    const img  = wrap.querySelector('.av-img');
-    const icon = wrap.querySelector('.av-icon');
+    const img      = wrap.querySelector('.av-img');
+    const icon     = wrap.querySelector('.av-icon');
+    const initials = wrap.querySelector('.av-initials');
+
+    // ซ่อน/รีเซ็ตทุกตัวก่อน
+    if (icon)     icon.style.display     = 'none';
+    if (initials) { initials.style.display = 'none'; initials.textContent = initial; }
+
     if (directUrl && img) {
-      // reset onerror state ก่อน (กรณีเปลี่ยน user)
       img.onerror = function() {
         this.style.display = 'none';
-        if (icon) icon.style.display = 'block';
+        // แสดง initials แทน icon
+        if (initials) { initials.style.display = 'flex'; }
+        else if (icon) { icon.style.display = ''; }
       };
       img.src = directUrl;
       img.style.display = 'block';
-      if (icon) icon.style.display = 'none';
-    } else if (img) {
-      img.src = '';
-      img.style.display = 'none';
-      if (icon) icon.style.display = '';
+    } else {
+      if (img) { img.src = ''; img.style.display = 'none'; }
+      // ไม่มี URL → แสดง initials (ถ้ามี name) หรือ icon
+      if (initials && initial && initial !== '?') {
+        initials.style.display = 'flex';
+      } else if (icon) {
+        icon.style.display = '';
+      }
     }
   });
 }
@@ -1812,7 +1824,7 @@ function startApp() {
   document.getElementById('user-display').textContent =
     _nameWithPosition(CU.name, CU.position) + ' · ' + CU.dept;
 
-  _updateAvatar(CU.photoUrl || '');
+  _updateAvatar(CU.photoUrl || '', CU.name);
   if (CU.role === 'hr') document.body.classList.add('role-hr');
   else document.body.classList.remove('role-hr');
 
@@ -1955,7 +1967,7 @@ function loadDashboard() {
         '<div class="empty-state"><p>' + (d && d.message || 'ไม่สามารถเชื่อมต่อได้') + '</p></div>';
       return;
     }
-    if (d.photoUrl !== undefined) _updateAvatar(d.photoUrl);
+    if (d.photoUrl !== undefined) _updateAvatar(d.photoUrl, CU.name);
     document.getElementById('s-remain').textContent        = d.remainLeave;
     document.getElementById('s-pending').textContent       = d.pendingCount;
     document.getElementById('s-annual').textContent        = d.annualLeave;
