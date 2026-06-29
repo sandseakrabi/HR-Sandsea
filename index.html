@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -494,8 +493,8 @@ body{
   </div>
   <div class="login-card">
     <p class="login-title">เข้าสู่ระบบฝ่ายบุคคล</p>
-    <input class="login-input" id="inp-empid"    type="text"     placeholder="รหัสพนักงาน" autocomplete="username">
-    <input class="login-input" id="inp-password" type="password" placeholder="รหัสผ่าน" autocomplete="current-password">
+    <input class="login-input" id="inp-empid"    type="text"     placeholder="รหัสพนักงาน" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('inp-password').focus()">
+    <input class="login-input" id="inp-password" type="password" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <div id="login-error" class="login-error"></div>
     <button class="btn btn-primary" id="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
   </div>
