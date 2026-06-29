@@ -483,6 +483,50 @@ body{
 </head>
 <body>
 
+<!-- ═══ iOS BROWSER WARNING (Chrome/Firefox บน iPhone ติดตั้ง PWA ไม่ได้) ═══ -->
+<div id="ios-browser-warning" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);align-items:flex-end;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">
+  <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;text-align:center;box-shadow:0 -8px 40px rgba(0,0,0,.25);">
+    <div style="width:48px;height:5px;background:#e2e8f0;border-radius:3px;margin:0 auto 24px;"></div>
+    <div style="font-size:44px;margin-bottom:12px;">⚠️</div>
+    <div style="font-size:18px;font-weight:700;color:#1a3a5c;margin-bottom:8px;">กรุณาใช้ Safari</div>
+    <div style="font-size:14px;color:#64748b;line-height:1.6;margin-bottom:24px;">
+      iPhone ไม่รองรับการติดตั้ง App ผ่าน Chrome<br>
+      กรุณาเปิดลิงก์นี้ด้วย <strong style="color:#1a3a5c;">Safari</strong> แล้วกด<br>
+      <strong style="color:#1a3a5c;">Share → Add to Home Screen</strong>
+    </div>
+    <div style="background:#f0f4f8;border-radius:16px;padding:16px;margin-bottom:20px;text-align:left;">
+      <div style="font-size:13px;font-weight:600;color:#1a3a5c;margin-bottom:10px;">วิธีติดตั้งบน iPhone:</div>
+      <div style="font-size:13px;color:#374151;line-height:1.8;">
+        1️⃣ คัดลอก URL ด้านล่าง<br>
+        2️⃣ เปิด <strong>Safari</strong> แล้ววางลิงก์<br>
+        3️⃣ กดปุ่ม <strong>Share</strong> 📤 ด้านล่าง<br>
+        4️⃣ เลือก <strong>"Add to Home Screen"</strong>
+      </div>
+    </div>
+    <div id="ios-warn-url" style="background:#1a3a5c;color:#fff;border-radius:10px;padding:10px 14px;font-size:12px;word-break:break-all;margin-bottom:16px;cursor:pointer;font-family:monospace;" onclick="copyUrlToClipboard()">
+      กดเพื่อคัดลอกลิงก์
+    </div>
+    <button onclick="document.getElementById('ios-browser-warning').style.display='none'" style="background:#f3f4f6;border:none;border-radius:12px;padding:13px 24px;font-size:14px;font-weight:600;color:#374151;cursor:pointer;width:100%;font-family:'Sarabun',sans-serif;">
+      ปิด (ใช้งานผ่านเบราว์เซอร์แทน)
+    </button>
+  </div>
+</div>
+
+<!-- ═══ iOS SAFARI INSTALL BANNER ═══ -->
+<div id="ios-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9998;background:#fff;border-top:1px solid #e2e8f0;box-shadow:0 -4px 24px rgba(0,0,0,.12);padding:16px 20px calc(16px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
+  <div style="display:flex;align-items:flex-start;gap:14px;">
+    <img src="icon-HR.png" style="width:52px;height:52px;border-radius:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);" onerror="this.style.display='none'">
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:14px;font-weight:700;color:#1a3a5c;margin-bottom:2px;">ติดตั้ง HR Sandsea</div>
+      <div style="font-size:12px;color:#64748b;line-height:1.5;">กด <strong>Share</strong> 📤 แล้วเลือก<br><strong>"Add to Home Screen"</strong> เพื่อติดตั้ง</div>
+    </div>
+    <button onclick="document.getElementById('ios-install-banner').style.display='none'" style="background:none;border:none;font-size:20px;color:#94a3b8;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">✕</button>
+  </div>
+  <!-- ลูกศรชี้ปุ่ม Share -->
+  <div style="text-align:center;margin-top:10px;font-size:22px;animation:bounce-arrow .8s ease-in-out infinite alternate;">⬇️</div>
+  <style>@keyframes bounce-arrow{from{transform:translateY(0)}to{transform:translateY(6px)}}</style>
+</div>
+
 <!-- ═══ LOGIN ═══ -->
 <div id="login-screen" class="screen active">
   <div class="login-logo">
@@ -3676,7 +3720,65 @@ function confirmDeactivate() {
 }
 // ══════════════════════════════════════════════════════════════
 
-// ── Fetch API สำหรับติดต่อ Google Apps Script Web App ──
+
+// ══════════════════════════════════════════════════════════════
+// iOS PWA INSTALL DETECTION
+// ══════════════════════════════════════════════════════════════
+(function() {
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isSafari = /^((?!chrome|crios|fxios|opios).)*safari/i.test(ua);
+  const isChromeiOS = /CriOS/i.test(ua);
+  const isStandalone = window.navigator.standalone === true;
+
+  if (!isIOS || isStandalone) return; // ไม่ใช่ iOS หรือติดตั้งแล้ว → ไม่ต้องทำอะไร
+
+  if (isChromeiOS || !isSafari) {
+    // เปิดด้วย Chrome หรือ browser อื่นบน iOS → แสดง warning
+    var warn = document.getElementById('ios-browser-warning');
+    if (warn) {
+      warn.style.display = 'flex';
+      var urlEl = document.getElementById('ios-warn-url');
+      if (urlEl) urlEl.textContent = window.location.href;
+    }
+  } else if (isSafari) {
+    // เปิดด้วย Safari บน iOS (ยังไม่ติดตั้ง) → แสดง install banner
+    var dismissed = sessionStorage.getItem('ios-banner-dismissed');
+    if (!dismissed) {
+      setTimeout(function() {
+        var banner = document.getElementById('ios-install-banner');
+        if (banner) banner.style.display = 'block';
+      }, 2500);
+      // ซ่อน banner เมื่อกดปิด + บันทึก session
+      var closeBtn = document.querySelector('#ios-install-banner button');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          sessionStorage.setItem('ios-banner-dismissed', '1');
+        });
+      }
+    }
+  }
+})();
+
+function copyUrlToClipboard() {
+  var url = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() {
+      var el = document.getElementById('ios-warn-url');
+      if (el) { el.textContent = '✅ คัดลอกแล้ว!'; setTimeout(function(){ el.textContent = url; }, 2000); }
+    });
+  } else {
+    // fallback สำหรับ iOS เก่า
+    var ta = document.createElement('textarea');
+    ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    var el = document.getElementById('ios-warn-url');
+    if (el) { el.textContent = '✅ คัดลอกแล้ว!'; setTimeout(function(){ el.textContent = url; }, 2000); }
+  }
+}
+
 var _apiInFlight = 0; // นับจำนวน request ที่กำลังทำงานอยู่ (var เพื่อ hoist ป้องกัน TDZ)
 
 function callServerAPI(action, data, callback) {
