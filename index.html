@@ -1760,13 +1760,17 @@ function doChangePwModal() {
   });
 }
 // ── UPDATE AVATAR (รูปพนักงาน) ──
+// แปลง Google Drive sharing URL → thumbnail URL ที่โหลดได้ใน <img>
+function _driveImgUrl(url) {
+  if (!url) return '';
+  const m = url.match(/\/file\/d\/([^\/\?]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w400-h400';
+  return url;
+}
+
 function _updateAvatar(photoUrl, name) {
   // แปลง Google Drive sharing URL → direct thumbnail URL
-  let directUrl = photoUrl || '';
-  if (directUrl) {
-    const m = directUrl.match(/\/file\/d\/([^\/\?]+)/);
-    if (m) directUrl = 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w400-h400';
-  }
+  let directUrl = _driveImgUrl(photoUrl);
   // ตัวอักษรย่อ (ใช้แทนรูปเมื่อโหลดไม่ได้)
   const initial = (name || CU && CU.name || '?').trim().charAt(0).toUpperCase();
 
@@ -3436,7 +3440,7 @@ function _resetEmpPhoto(photoUrl) {
   const img  = document.getElementById('emp-photo-img');
   const init = document.getElementById('emp-photo-initial');
   if (photoUrl) {
-    img.src           = photoUrl;
+    img.src           = _driveImgUrl(photoUrl);
     img.style.display = 'block';
     init.style.display = 'none';
   } else {
@@ -3512,7 +3516,7 @@ function renderEmpList() {
       ? '<span class="badge badge-success" style="font-size:10px">active</span>'
       : '<span class="badge badge-danger" style="font-size:10px">inactive</span>';
     const avatarHtml = e.photoUrl
-      ? '<img src="' + e.photoUrl + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;flex&quot;">' +
+      ? '<img src="' + _driveImgUrl(e.photoUrl) + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;flex&quot;">' +
         '<div style="display:none;width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">' + initials + '</div>'
       : '<div style="width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">' + initials + '</div>';
     return '<div class="list-row" onclick="openEmpModal(\'' + e.empId + '\')">' +
