@@ -2311,7 +2311,9 @@ function _inCurrentPayCycle(startDateStr, endDateStr) {
 
 // ── กรองเฉพาะใบลาที่อยู่ในรอบบัญชีปัจจุบัน (ใช้เฉพาะหน้าอนุมัติ ไม่กระทบ "ใบลาของฉัน"/สรุปวันลา/สรุปใบลา) ──
 function _filterByPayCycle(rows) {
-  return rows.filter(r => _inCurrentPayCycle(r.startDate, r.endDate));
+  // รออนุมัติ → แสดงเสมอ ไม่สนรอบบัญชี (กันกรณีแจ้งลาล่วงหน้า)
+  // อนุมัติ/ไม่อนุมัติ → แสดงเฉพาะรอบบัญชีปัจจุบัน
+  return rows.filter(r => r.status === 'รออนุมัติ' || _inCurrentPayCycle(r.startDate, r.endDate));
 }
 
 function loadLeaveRequests() {
