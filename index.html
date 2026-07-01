@@ -2414,11 +2414,10 @@ function renderApproveList(rows) {
         attach +
       '</div>' +
       '<span class="badge ' + badgeCls + '">' + r.status + '</span>';
-    // คลิกที่ row เพื่อเปิด modal อนุมัติ
-    // - leader/gm: อนุมัติได้ตามปกติ
-    // - hr: ปกติไม่มีสิทธิ์อนุมัติ ยกเว้นกรณี "ลืมสแกนนิ้ว" ที่ต้องผ่าน HR เป็นขั้นที่ 2 (Leader → HR → GM)
-    const hrCanApproveThis = CU.role === 'hr' && r.type === 'ลืมสแกนนิ้ว' && r.status === 'รอ HR อนุมัติ';
-    if ((CU.role !== 'employee' && CU.role !== 'hr') || hrCanApproveThis) {
+    // คลิกที่ row เพื่อเปิด modal อนุมัติ (เฉพาะ role ที่มีสิทธิ์ ไม่รวม hr และ employee)
+    // หมายเหตุ: ลืมสแกนนิ้ว ขั้นที่ 2 อนุมัติโดย "Leader ฝ่ายบุคคล" (role=leader, dept=HR) ไม่ใช่ role=hr
+    // ดังนั้น role hr ยังคงดูได้อย่างเดียวเหมือนเดิมทุกกรณี
+    if (CU.role !== 'employee' && CU.role !== 'hr') {
       row.style.cursor = 'pointer';
       row.addEventListener('click', function() { openApproveModal(r.id); });
     }
@@ -2558,10 +2557,8 @@ function submitEditLeave() {
 }
 
 function openApproveModal(id) {
+  if (CU.role==='employee' || CU.role==='hr') { toast('คุณไม่มีสิทธิ์อนุมัติ'); return; }
   const r = allLeaveReqs.find(x=>x.id===id); if (!r) return;
-  // hr ปกติไม่มีสิทธิ์อนุมัติ ยกเว้นกรณี "ลืมสแกนนิ้ว" ที่รอ HR อนุมัติอยู่ (ขั้นที่ 2 ของ Leader → HR → GM)
-  const hrCanApproveThis = CU.role === 'hr' && r.type === 'ลืมสแกนนิ้ว' && r.status === 'รอ HR อนุมัติ';
-  if (CU.role==='employee' || (CU.role==='hr' && !hrCanApproveThis)) { toast('คุณไม่มีสิทธิ์อนุมัติ'); return; }
   currentLeaveId = id;
   document.getElementById('approve-note').value = '';
   document.getElementById('approve-modal-content').innerHTML = `
