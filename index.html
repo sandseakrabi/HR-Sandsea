@@ -2394,7 +2394,7 @@ function renderApproveList(rows) {
     wrap.className = 'card';
     wrap.style.marginBottom = '10px';
 
-    const badgeCls = r.status==='รออนุมัติ'?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger';
+    const badgeCls = (r.status==='รออนุมัติ'||r.status==='รอ HR อนุมัติ'||r.status==='รอ GM อนุมัติ')?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger';
     const attach = r.attachmentUrl
       ? '<div style="margin-top:4px"><a href="' + r.attachmentUrl + '" target="_blank" style="font-size:12px;color:var(--info)">ดูไฟล์แนบ</a></div>'
       : '';
@@ -2414,8 +2414,11 @@ function renderApproveList(rows) {
         attach +
       '</div>' +
       '<span class="badge ' + badgeCls + '">' + r.status + '</span>';
-    // คลิกที่ row เพื่อเปิด modal อนุมัติ (เฉพาะ role ที่มีสิทธิ์ ไม่รวม hr และ employee)
-    if (CU.role !== 'employee' && CU.role !== 'hr') {
+    // คลิกที่ row เพื่อเปิด modal อนุมัติ
+    // - leader/gm: อนุมัติได้ตามปกติ
+    // - hr: ปกติไม่มีสิทธิ์อนุมัติ ยกเว้นกรณี "ลืมสแกนนิ้ว" ที่ต้องผ่าน HR เป็นขั้นที่ 2 (Leader → HR → GM)
+    const hrCanApproveThis = CU.role === 'hr' && r.type === 'ลืมสแกนนิ้ว' && r.status === 'รอ HR อนุมัติ';
+    if ((CU.role !== 'employee' && CU.role !== 'hr') || hrCanApproveThis) {
       row.style.cursor = 'pointer';
       row.addEventListener('click', function() { openApproveModal(r.id); });
     }
@@ -2490,7 +2493,7 @@ function renderMyLeave(rows) {
         <div class="row-sub">${r.reason}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-        <span class="badge ${r.status==='รออนุมัติ'?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger'}">${r.status}</span>
+        <span class="badge ${(r.status==='รออนุมัติ'||r.status==='รอ HR อนุมัติ'||r.status==='รอ GM อนุมัติ')?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger'}">${r.status}</span>
         ${r.status==='รออนุมัติ' ? `
           <div style="display:flex;gap:6px">
             <button onclick="openEditLeaveModal('${r.id}')"
@@ -2555,8 +2558,10 @@ function submitEditLeave() {
 }
 
 function openApproveModal(id) {
-  if (CU.role==='employee' || CU.role==='hr') { toast('คุณไม่มีสิทธิ์อนุมัติ'); return; }
   const r = allLeaveReqs.find(x=>x.id===id); if (!r) return;
+  // hr ปกติไม่มีสิทธิ์อนุมัติ ยกเว้นกรณี "ลืมสแกนนิ้ว" ที่รอ HR อนุมัติอยู่ (ขั้นที่ 2 ของ Leader → HR → GM)
+  const hrCanApproveThis = CU.role === 'hr' && r.type === 'ลืมสแกนนิ้ว' && r.status === 'รอ HR อนุมัติ';
+  if (CU.role==='employee' || (CU.role==='hr' && !hrCanApproveThis)) { toast('คุณไม่มีสิทธิ์อนุมัติ'); return; }
   currentLeaveId = id;
   document.getElementById('approve-note').value = '';
   document.getElementById('approve-modal-content').innerHTML = `
@@ -2567,7 +2572,7 @@ function openApproveModal(id) {
         ${r.halfDay?'(ครึ่งวัน)':'('+r.days+' วัน)'}
       </div>
       <div style="color:var(--muted);font-size:13px;margin-top:4px">${r.reason}</div>
-      <span class="badge ${r.status==='รออนุมัติ'?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger'}"
+      <span class="badge ${(r.status==='รออนุมัติ'||r.status==='รอ HR อนุมัติ'||r.status==='รอ GM อนุมัติ')?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger'}"
         style="margin-top:8px;display:inline-block">${r.status}</span>
     </div></div>`;
   openModal('approve-modal');
@@ -2721,7 +2726,7 @@ function searchLeaveList() {
 
   rows.forEach(r => {
     const isPending = r.status === 'รออนุมัติ';
-    const badgeCls = r.status==='รออนุมัติ'?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger';
+    const badgeCls = (r.status==='รออนุมัติ'||r.status==='รอ HR อนุมัติ'||r.status==='รอ GM อนุมัติ')?'badge-warn':r.status==='อนุมัติ'?'badge-success':'badge-danger';
     const dateRange = r.startDate + (r.endDate !== r.startDate ? ' – ' + r.endDate : '');
     const dayLabel  = r.halfDay ? '(ครึ่งวัน)' : '(' + r.days + ' วัน)';
     const attach    = r.attachmentUrl
