@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1672,7 +1673,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycby_yW7yP-QIjkGdb8MoCkhoj0wa5-A70KWL3Gl0AMZEM1-pv8K7xOvu4WUcs0Wg5xyx/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzeB28QYvvXeVkXDfg0RqtDiAiKvA_pMjUMsHIdpdTsDyJLbZdicB_Ck6dNEK7sEgBc/exec"; 
 
 let CURRENT_USER = null;
 
@@ -2506,7 +2507,9 @@ function renderApproveList(rows) {
       '<div class="avatar" style="background:#dbeafe;color:#1d4ed8">' + r.empName.substring(0,2) + '</div>' +
       '<div class="row-info">' +
         '<div class="row-label">' + _nameWithPosition(r.empName, r.empPosition) +
-          '<span style="color:var(--muted);font-weight:400;font-size:12px"> · ' + r.dept + '</span></div>' +
+          '<span style="color:var(--muted);font-weight:400;font-size:12px"> · ' + r.dept + '</span>' +
+          (r.createdAtTH ? '<span style="color:var(--muted);font-weight:400;font-size:12px"> · ' + r.createdAtTH + '</span>' : '') +
+        '</div>' +
         '<div class="row-sub">' + r.type + ' · ' + dateRange + ' ' + dayLabel + '</div>' +
         '<div class="row-sub" style="margin-top:2px">' + r.reason + '</div>' +
         attach +
@@ -2857,7 +2860,9 @@ function searchLeaveList() {
       '<div class="avatar" style="background:#dbeafe;color:#1d4ed8">' + r.empName.substring(0,2) + '</div>' +
       '<div class="row-info">' +
         '<div class="row-label">' + _nameWithPosition(r.empName, r.empPosition) +
-          '<span style="color:var(--muted);font-weight:400;font-size:12px"> · ' + r.dept + '</span></div>' +
+          '<span style="color:var(--muted);font-weight:400;font-size:12px"> · ' + r.dept + '</span>' +
+          (r.createdAtTH ? '<span style="color:var(--muted);font-weight:400;font-size:12px"> · ' + r.createdAtTH + '</span>' : '') +
+        '</div>' +
         '<div class="row-sub">' + r.type + ' · ' + dateRange + ' ' + dayLabel + '</div>' +
         '<div class="row-sub" style="margin-top:2px">' + r.reason + '</div>' +
         attach +
@@ -2906,6 +2911,7 @@ function exportLeaveListExcel() {
     'รหัสพนักงาน'  : r.empId,
     'ชื่อพนักงาน'  : r.empName + (r.empPosition ? ' (' + r.empPosition + ')' : ''),
     'แผนก'         : r.dept,
+    'วันลงระบบ'    : r.createdAtTH || '',
     'ประเภทลา'     : r.type,
     'วันที่เริ่ม'   : r.startDate,
     'วันที่สิ้นสุด' : r.endDate,
@@ -2913,7 +2919,7 @@ function exportLeaveListExcel() {
     'ครึ่งวัน'     : r.halfDay ? 'ใช่' : '',
     'สถานะ'        : r.status,
     'เหตุผล'       : r.reason,
-    'ผู้อนุมัติ'    : r.approvedBy || '',
+    'ผู้อนุมัติ'    : r.approver || '',
     'วันที่อนุมัติ' : r.approvedAt || ''
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
