@@ -923,6 +923,23 @@ body{
       <div style="height:16px"></div>
     </div>
 
+    <!-- ── filter + list (สำหรับ role ที่ไม่ใช่ leader/gm — คือ HR และ employee) ── -->
+    <div id="filter-row-wrap" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <div id="filter-row" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:180px">
+        <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
+      </div>
+      <div id="filter-row-search-wrap" style="display:none;position:relative;flex-shrink:0;width:220px;max-width:100%">
+        <svg viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none">
+          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="form-input approve-quicksearch-input" placeholder="ค้นหา รหัส / ชื่อ / ประเภทใบลา" style="padding-left:32px;font-size:13px" oninput="onApproveQuickSearch(this)">
+      </div>
+    </div>
+    <div id="approve-list-employee"><div class="loading">กำลังโหลด...</div></div>
+
     <!-- ── สรุปวันลา (HR / Leader / GM — employee จะถูกซ่อนผ่าน JS ใน startApp) ── -->
     <div id="leave-summary-section">
       <div class="card" style="margin-bottom:14px">
@@ -1053,23 +1070,6 @@ body{
         </div>
       </div>
     </div>
-
-    <!-- ── filter + list (สำหรับ role ที่ไม่ใช่ HR/leader) ── -->
-    <div id="filter-row-wrap" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <div id="filter-row" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:180px">
-        <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
-        <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
-        <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
-        <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
-      </div>
-      <div id="filter-row-search-wrap" style="display:none;position:relative;flex-shrink:0;width:220px;max-width:100%">
-        <svg viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none">
-          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" class="form-input approve-quicksearch-input" placeholder="ค้นหา รหัส / ชื่อ / ประเภทใบลา" style="padding-left:32px;font-size:13px" oninput="onApproveQuickSearch(this)">
-      </div>
-    </div>
-    <div id="approve-list-employee"><div class="loading">กำลังโหลด...</div></div>
   </div>
 
   <!-- HR -->
