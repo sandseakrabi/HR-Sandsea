@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1673,7 +1672,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbzeB28QYvvXeVkXDfg0RqtDiAiKvA_pMjUMsHIdpdTsDyJLbZdicB_Ck6dNEK7sEgBc/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwDE2_AA14VoiQJNucdT45OqX4UQ1brUFELGyp4ppSphNzE6f2EcNMqIExySgHiZpc0/exec"; 
 
 let CURRENT_USER = null;
 
@@ -2161,6 +2160,21 @@ function openLeaveModal(type, hasAttach, hasHalf) {
   document.getElementById('file-label').textContent       = 'เลือกไฟล์หรือรูปภาพ';
   document.getElementById('leave-reason').value           = '';
   document.getElementById('leave-days-hint').textContent  = '';
+
+  // ── ล็อคปฏิทิน ไม่ให้เลือกวันย้อนหลัง สำหรับประเภทลาที่ต้องขอล่วงหน้า ──
+  // (เหมือนกับ ลานักขัตฤกษ์ ที่ล็อคอยู่แล้ว) ส่วน ลาป่วย/ลาป่วยไม่มีใบ/ลืมสแกนนิ้ว/
+  // ขาดงาน/มาสาย ยังคงเลือกวันย้อนหลังได้ตามปกติ เพราะมักแจ้งย้อนหลังหลังเกิดเหตุ
+  const lockPastTypes = ['ลาพักร้อน','ลาพักร้อน(ยกยอด)','ลากิจ','ลานักขัตฤกษ์(ยกยอด)'];
+  const todayStr = _localDate(new Date());
+  const lockPast = lockPastTypes.includes(type);
+  document.getElementById('leave-start').min = lockPast ? todayStr : '';
+  document.getElementById('leave-end').min   = lockPast ? todayStr : '';
+  // ถ้าค่าที่ค้างอยู่ในช่องเป็นวันย้อนหลัง ให้รีเซ็ตเป็นวันนี้เมื่อเปิดฟอร์มที่ล็อค
+  if (lockPast) {
+    if (document.getElementById('leave-start').value < todayStr) document.getElementById('leave-start').value = todayStr;
+    if (document.getElementById('leave-end').value   < todayStr) document.getElementById('leave-end').value   = todayStr;
+  }
+
   openModal('leave-modal');
 }
 function onHalfToggle() {
