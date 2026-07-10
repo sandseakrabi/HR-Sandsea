@@ -1672,7 +1672,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbzeB28QYvvXeVkXDfg0RqtDiAiKvA_pMjUMsHIdpdTsDyJLbZdicB_Ck6dNEK7sEgBc/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwDE2_AA14VoiQJNucdT45OqX4UQ1brUFELGyp4ppSphNzE6f2EcNMqIExySgHiZpc0/exec"; 
 
 let CURRENT_USER = null;
 
@@ -3423,7 +3423,13 @@ function saveScheduleJS() {
     if (cov < lastDay) incomplete.push(obj.emp.name + ' (' + cov + '/' + lastDay + ' วัน)');
   });
   if (incomplete.length) {
-    if (!confirm('มีพนักงานที่ยังไม่ครบ ' + lastDay + ' วัน:\n' + incomplete.join('\n') + '\n\nบันทึกต่อ?')) return;
+    if (!confirm('มีพนักงานที่ยังไม่ครบ ' + lastDay + ' วัน:\n' + incomplete.join('\n') + '\n\nบันทึกต่อ?')) {
+      // ── สำคัญ: เดิมถ้ากด "ยกเลิก" ที่ popup นี้ ฟังก์ชันจะ return เฉยๆ
+      // โดยไม่มี toast แจ้งอะไรเลย ผู้ใช้จึงเข้าใจผิดว่า "กดบันทึกแล้วไม่มีอะไรเกิดขึ้น"
+      // ทั้งที่จริงคือระบบไม่ได้ส่งข้อมูลไป server เลย (ชีตจึงไม่เปลี่ยนแปลง)
+      toast('ยกเลิกการบันทึก — ยังไม่มีการเปลี่ยนแปลงในตารางงาน');
+      return;
+    }
   }
 
   toast('กำลังบันทึก...');
