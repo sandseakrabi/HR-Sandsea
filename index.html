@@ -1672,7 +1672,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbzeB28QYvvXeVkXDfg0RqtDiAiKvA_pMjUMsHIdpdTsDyJLbZdicB_Ck6dNEK7sEgBc/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwDE2_AA14VoiQJNucdT45OqX4UQ1brUFELGyp4ppSphNzE6f2EcNMqIExySgHiZpc0/exec"; 
 
 let CURRENT_USER = null;
 
@@ -3241,7 +3241,7 @@ function renderRangePicker(employees, month, lastDay) {
     html += '<div style="background:#f8fafc;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">';
     html += '<div><span style="font-weight:600">' + _nameWithPosition(emp.name, emp.position) + '</span>';
     html += '<span style="font-size:12px;color:#6b7280;margin-left:8px">' + emp.empId + '</span></div>';
-    html += '<span style="font-size:12px;font-weight:600;color:' + coverColor + '">';
+    html += '<span id="cov-' + empId + '" style="font-size:12px;font-weight:600;color:' + coverColor + '">';
     html += coverage + '/' + lastDay + ' วัน</span>';
     html += '</div>';
 
@@ -3394,8 +3394,11 @@ function _refreshEmpBlock(empId, month, lastDay) {
   // อัพเดท coverage label
   const block = document.getElementById('block-' + empId);
   if (block) {
-    block.querySelector('span[style*="font-size:12px;font-weight:600"]').textContent = coverage + '/' + lastDay + ' วัน';
-    block.querySelector('span[style*="font-size:12px;font-weight:600"]').style.color = coverColor;
+    const covEl = document.getElementById('cov-' + empId);
+    if (covEl) {
+      covEl.textContent = coverage + '/' + lastDay + ' วัน';
+      covEl.style.color = coverColor;
+    }
     document.getElementById('segs-' + empId).innerHTML = _renderSegments(segs, empId, month, lastDay);
   }
 }
