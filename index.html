@@ -905,11 +905,19 @@ body{
 
     <!-- ── รายการใบลา (สำหรับ leader) แสดงทันทีไม่ต้องค้นหา ── -->
     <div id="leader-approve-section" style="display:none">
-      <div style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
-        <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
-        <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
-        <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
-        <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:180px">
+          <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
+          <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
+          <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
+          <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
+        </div>
+        <div style="position:relative;flex-shrink:0;width:220px;max-width:100%">
+          <svg viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none">
+            <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" class="form-input approve-quicksearch-input" placeholder="ค้นหา รหัส / ชื่อ / ประเภทใบลา" style="padding-left:32px;font-size:13px" oninput="onApproveQuickSearch(this)">
+        </div>
       </div>
       <div id="approve-list"><div class="loading">กำลังโหลด...</div></div>
       <div style="height:16px"></div>
@@ -1006,14 +1014,34 @@ body{
                 <input class="form-input" id="ll-name" type="text" placeholder="ค้นหา...">
               </div>
             </div>
-            <div class="form-group" style="margin-bottom:12px">
-              <label class="form-label">สถานะ</label>
-              <select class="form-select" id="ll-status">
-                <option value="ALL">ทั้งหมด</option>
-                <option value="รออนุมัติ">รออนุมัติ</option>
-                <option value="อนุมัติ">อนุมัติ</option>
-                <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
-              </select>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">สถานะ</label>
+                <select class="form-select" id="ll-status">
+                  <option value="ALL">ทั้งหมด</option>
+                  <option value="รออนุมัติ">รออนุมัติ</option>
+                  <option value="อนุมัติ">อนุมัติ</option>
+                  <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">ประเภทใบลา</label>
+                <select class="form-select" id="ll-type">
+                  <option value="ALL">ทั้งหมด</option>
+                  <option value="ลาป่วย">ลาป่วย</option>
+                  <option value="ลาป่วยไม่มีใบ">ลาป่วยไม่มีใบ</option>
+                  <option value="ลาพักร้อน">ลาพักร้อน</option>
+                  <option value="ลาพักร้อน(ยกยอด)">ลาพักร้อน(ยกยอด)</option>
+                  <option value="ลากิจ">ลากิจ</option>
+                  <option value="ลานักขัตฤกษ์">ลานักขัตฤกษ์</option>
+                  <option value="ลานักขัตฤกษ์(ยกยอด)">ลานักขัตฤกษ์(ยกยอด)</option>
+                  <option value="ลืมสแกนนิ้ว">ลืมสแกนนิ้ว</option>
+                  <option value="เก็บวันหยุด">เก็บวันหยุด</option>
+                  <option value="ใช้วันหยุด">ใช้วันหยุด</option>
+                  <option value="ขาดงาน">ขาดงาน</option>
+                  <option value="คำขอเปลี่ยนกะ">คำขอเปลี่ยนกะ</option>
+                </select>
+              </div>
             </div>
             <p class="form-hint" style="margin-bottom:10px">กรอกช่องใดช่องหนึ่งหรือหลายช่องก็ได้ — ช่องที่ว่างจะไม่กรอง</p>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -1027,11 +1055,19 @@ body{
     </div>
 
     <!-- ── filter + list (สำหรับ role ที่ไม่ใช่ HR/leader) ── -->
-    <div id="filter-row" style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
-      <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
-      <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
-      <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
-      <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
+    <div id="filter-row-wrap" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <div id="filter-row" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:180px">
+        <button class="btn btn-primary btn-sm" onclick="filterLeave('all',this)">ทั้งหมด</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('รออนุมัติ',this)">รออนุมัติ</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('อนุมัติ',this)">อนุมัติ</button>
+        <button class="btn btn-outline btn-sm" onclick="filterLeave('ไม่อนุมัติ',this)">ไม่อนุมัติ</button>
+      </div>
+      <div id="filter-row-search-wrap" style="display:none;position:relative;flex-shrink:0;width:220px;max-width:100%">
+        <svg viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none">
+          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="form-input approve-quicksearch-input" placeholder="ค้นหา รหัส / ชื่อ / ประเภทใบลา" style="padding-left:32px;font-size:13px" oninput="onApproveQuickSearch(this)">
+      </div>
     </div>
     <div id="approve-list-employee"><div class="loading">กำลังโหลด...</div></div>
   </div>
@@ -1636,7 +1672,7 @@ self.addEventListener('fetch', e => {
 </script>
 <script>
 // ⚠️ สำคัญมาก: ให้นำลิงก์ "ความฝัน/Web App URL" ที่ได้จากการ Deploy ใน Google Apps Script มาใส่ตรงนี้
-const API_URL = "https://script.google.com/macros/s/AKfycbwDE2_AA14VoiQJNucdT45OqX4UQ1brUFELGyp4ppSphNzE6f2EcNMqIExySgHiZpc0/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwDE2_AA14VoiQJNucdT45OqX4UQ1brUFELGyp4ppSphNzE6f2EcNMqIExySgHiZpc0/exec"; 
 
 let CURRENT_USER = null;
 
@@ -1925,7 +1961,8 @@ function startApp() {
   }
 
   // ── ตั้งค่า UI ตาม role ──
-  const filterRow          = document.getElementById('filter-row');
+  const filterRowWrap      = document.getElementById('filter-row-wrap');
+  const filterRowSearchWrap = document.getElementById('filter-row-search-wrap');
   const approveList        = document.getElementById('approve-list');
   const approveListEmp     = document.getElementById('approve-list-employee');
   const leaderSection      = document.getElementById('leader-approve-section');
@@ -1945,7 +1982,8 @@ function startApp() {
   if (CU.role === 'hr') {
     // HR: เห็นใบลาทุกคนผ่าน approve-list-employee + filter แต่ไม่มีสิทธิ์อนุมัติ
     if (leaderSection)        leaderSection.style.display        = 'none';
-    if (filterRow)            filterRow.style.display            = 'flex';
+    if (filterRowWrap)        filterRowWrap.style.display        = 'flex';
+    if (filterRowSearchWrap)  filterRowSearchWrap.style.display  = 'block'; // ค้นหาด่วน: เฉพาะ HR
     if (approveListEmp)       approveListEmp.style.display       = 'block';
     if (leaveSummarySection)  leaveSummarySection.style.display  = 'block';
     if (leaveListSection)     leaveListSection.style.display     = 'block';
@@ -1956,7 +1994,7 @@ function startApp() {
   } else if (CU.role === 'leader') {
     // Leader: อนุมัติใบลา employee ในแผนกตัวเอง + ดูสรุปวันลา
     if (leaderSection)        leaderSection.style.display        = 'block';
-    if (filterRow)            filterRow.style.display            = 'none';
+    if (filterRowWrap)        filterRowWrap.style.display        = 'none';
     if (approveListEmp)       approveListEmp.style.display       = 'none';
     if (leaveSummarySection)  leaveSummarySection.style.display  = 'block';
     if (leaveListSection)     leaveListSection.style.display     = 'block';
@@ -1967,7 +2005,7 @@ function startApp() {
   } else if (CU.role === 'gm') {
     // GM: เห็นใบลาที่ leader อนุมัติมาแล้ว (ไม่เห็นใบลา employee โดยตรง) + สรุปวันลา
     if (leaderSection)        leaderSection.style.display        = 'block';
-    if (filterRow)            filterRow.style.display            = 'none';
+    if (filterRowWrap)        filterRowWrap.style.display        = 'none';
     if (approveListEmp)       approveListEmp.style.display       = 'none';
     if (leaveSummarySection)  leaveSummarySection.style.display  = 'block';
     if (leaveListSection)     leaveListSection.style.display     = 'block';
@@ -1976,9 +2014,10 @@ function startApp() {
     if (llDept)  { llDept.disabled  = false; llDept.value  = 'ALL'; }
 
   } else {
-    // employee: เห็นแค่ใบลาของตัวเองผ่าน filter-row
+    // employee: เห็นแค่ใบลาของตัวเองผ่าน filter-row (ไม่มีช่องค้นหาด่วน)
     if (leaderSection)        leaderSection.style.display        = 'none';
-    if (filterRow)            filterRow.style.display            = 'flex';
+    if (filterRowWrap)        filterRowWrap.style.display        = 'flex';
+    if (filterRowSearchWrap)  filterRowSearchWrap.style.display  = 'none'; // employee ไม่เห็นช่องค้นหาด่วน
     if (approveListEmp)       approveListEmp.style.display       = 'block';
     if (leaveSummarySection)  leaveSummarySection.style.display  = 'none';
     if (leaveListSection)     leaveListSection.style.display     = 'none';
@@ -2380,11 +2419,15 @@ function _filterByPayCycle(rows) {
   return rows.filter(r => r.status === 'รออนุมัติ' || _inCurrentPayCycle(r.startDate, r.endDate));
 }
 
+// ── หน้าอนุมัติ: สถานะ filter ปัจจุบัน + คำค้นหาด่วน (เฉพาะ leader/hr/gm) ──
+let _approveStatusFilter   = 'all';
+let _approveQuickSearchText = '';
+
 function loadLeaveRequests() {
   callServerAPI('getLeaveRequests', { role: CU.role, dept: CU.dept, subDept: CU.subDept||'', empId: CU.empId }, rows => {
     if (!rows) return;
     allLeaveReqs = rows; // เก็บข้อมูลครบทุกช่วงเวลาไว้ใน allLeaveReqs (ใบลาของฉันยังเห็นประวัติทั้งหมด)
-    renderApproveList(_filterByPayCycle(rows)); // หน้าอนุมัติ: แสดงเฉพาะรอบบัญชีปัจจุบัน
+    _applyApproveFilters(); // หน้าอนุมัติ: แสดงเฉพาะรอบบัญชีปัจจุบัน + สถานะ/คำค้นหาที่เลือกอยู่
     renderMyLeave(rows);
   });
 }
@@ -2394,8 +2437,33 @@ function filterLeave(status, btn) {
   const parentRow = btn.closest('div');
   parentRow.querySelectorAll('.btn').forEach(b => b.className='btn btn-outline btn-sm');
   btn.className = 'btn btn-primary btn-sm';
+  _approveStatusFilter = status;
+  _applyApproveFilters();
+}
+
+// ── ค้นหาด่วนในหน้าอนุมัติ: รหัสพนักงาน / ชื่อ / ประเภทใบลา (เฉพาะ leader/hr/gm) ──
+function onApproveQuickSearch(el) {
+  _approveQuickSearchText = (el.value || '').trim().toLowerCase();
+  // sync ค่าระหว่างกล่องค้นหาทั้งสองจุด (leader/gm กับ hr) เผื่อมีการสลับมุมมอง
+  document.querySelectorAll('.approve-quicksearch-input').forEach(inp => {
+    if (inp !== el) inp.value = el.value;
+  });
+  _applyApproveFilters();
+}
+
+// ── รวม filter สถานะ + คำค้นหาด่วน แล้ว render รายการ ──
+function _applyApproveFilters() {
   const cycleRows = _filterByPayCycle(allLeaveReqs);
-  renderApproveList(status==='all' ? cycleRows : cycleRows.filter(r=>r.status===status));
+  let rows = _approveStatusFilter === 'all' ? cycleRows : cycleRows.filter(r => r.status === _approveStatusFilter);
+  if (_approveQuickSearchText) {
+    const q = _approveQuickSearchText;
+    rows = rows.filter(r =>
+      String(r.empId || '').toLowerCase().includes(q) ||
+      String(r.empName || '').toLowerCase().includes(q) ||
+      String(r.type || '').toLowerCase().includes(q)
+    );
+  }
+  renderApproveList(rows);
 }
 
 function renderApproveList(rows) {
@@ -2740,6 +2808,7 @@ function searchLeaveList() {
   const llEmpId  = (document.getElementById('ll-empid').value  || '').toLowerCase().trim();
   const llName   = (document.getElementById('ll-name').value   || '').toLowerCase().trim();
   const llStatus = (document.getElementById('ll-status').value || 'ALL').trim();
+  const llType   = (document.getElementById('ll-type').value   || 'ALL').trim();
 
   const el = document.getElementById('leavelist-result');
   const exportBtn = document.getElementById('ll-export-btn');
@@ -2749,6 +2818,7 @@ function searchLeaveList() {
   let rows = (allLeaveReqs || []).filter(r => {
     if (llDept   !== 'ALL' && r.dept   !== llDept)   return false;
     if (llStatus !== 'ALL' && r.status !== llStatus) return false;
+    if (llType   !== 'ALL' && r.type   !== llType)   return false;
     if (llEmpId  && !String(r.empId).toLowerCase().includes(llEmpId))   return false;
     if (llName   && !String(r.empName).toLowerCase().includes(llName))  return false;
     if (llStart  && r.startDate < llStart) return false;
