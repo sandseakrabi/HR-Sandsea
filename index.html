@@ -3928,6 +3928,11 @@ function copyUrlToClipboard() {
 
 var _apiInFlight = 0; // นับจำนวน request ที่กำลังทำงานอยู่ (var เพื่อ hoist ป้องกัน TDZ)
 
+// ── Retry + backoff: กันตอนเซิร์ฟเวอร์ (Google Apps Script) ชนโควตา
+//    ตอนมีคนหลายสิบคนกดพร้อมกัน — ลองใหม่อัตโนมัติก่อนแจ้ง error ให้ผู้ใช้ ──
+const API_MAX_RETRIES  = 3;
+const API_BASE_DELAY_MS = 1000; // รอ 1s → 2s → 4s (exponential backoff)
+
 function callServerAPI(action, data, callback) {
   const payload = JSON.stringify({ action, ...data });
 
@@ -3935,25 +3940,38 @@ function callServerAPI(action, data, callback) {
   _apiInFlight++;
   _setGlobalLoading(true);
 
-  fetch(API_URL, {
-    method: 'POST',
-    mode: 'cors',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: payload
-  })
-  .then(res => {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  })
-  .then(response => { if (callback) callback(response); })
-  .catch(err => {
-    console.error('API Error [' + action + ']:', err);
-    if (callback) callback({ success: false, message: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message });
-  })
-  .finally(() => {
+  function finish(response) {
     _apiInFlight--;
     if (_apiInFlight <= 0) { _apiInFlight = 0; _setGlobalLoading(false); }
-  });
+    if (callback) callback(response);
+  }
+
+  function attempt(retryCount) {
+    fetch(API_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: payload
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(response => finish(response))
+    .catch(err => {
+      // เชื่อมต่อไม่สำเร็จ / เซิร์ฟเวอร์ไม่ตอบทัน (เช่น ชนโควตาการทำงานพร้อมกัน) → ลองใหม่อัตโนมัติ
+      if (retryCount < API_MAX_RETRIES) {
+        const delay = API_BASE_DELAY_MS * Math.pow(2, retryCount);
+        console.warn('API retry [' + action + '] รอบที่ ' + (retryCount + 1) + '/' + API_MAX_RETRIES + ' อีก ' + delay + 'ms...');
+        setTimeout(() => attempt(retryCount + 1), delay);
+        return;
+      }
+      console.error('API Error [' + action + ']:', err);
+      finish({ success: false, message: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง (' + err.message + ')' });
+    });
+  }
+
+  attempt(0);
 }
 
 // แสดง/ซ่อน overlay loading บนปุ่ม submit ทุกปุ่ม
